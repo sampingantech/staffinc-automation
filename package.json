@@ -4,13 +4,6 @@
   "description": "Automation API built using playwrightJS.",
   "scripts": {
     "prepare": "husky install",
-    "test:thor": "npm test --workspace=thor",
-    "test:shuri": "npm test --workspace=shuri",
-    "test:venom": "npm test --workspace=venom",
-    "test:submission": "npm test --workspace=submission",
-    "test:confirmation": "npm test --workspace=confirmation",
-    "test:product-pricing": "npm test --workspace=product-pricing",
-    "env:get": "npm start --workspace=core get-env",
     "prisma:setup": "npm start --workspace=core prisma setup",
     "prisma:generate": "npm start --workspace=core prisma generate",
     "schema:generate": "json-to-zod -s temp.json -t temp.schema.ts",
