@@ -1,0 +1,60 @@
+{
+  "name": "staffinc-automation",
+  "version": "1.0.0",
+  "description": "Automation API built using playwrightJS.",
+  "scripts": {
+    "prepare": "husky install",
+    "test:thor": "npm test --workspace=thor",
+    "test:shuri": "npm test --workspace=shuri",
+    "test:venom": "npm test --workspace=venom",
+    "test:submission": "npm test --workspace=submission",
+    "test:confirmation": "npm test --workspace=confirmation",
+    "test:product-pricing": "npm test --workspace=product-pricing",
+    "env:get": "npm start --workspace=core get-env",
+    "prisma:setup": "npm start --workspace=core prisma setup",
+    "prisma:generate": "npm start --workspace=core prisma generate",
+    "schema:generate": "json-to-zod -s temp.json -t temp.schema.ts",
+    "test:platform": "npm test --workspace=platform",
+    "test:shared": "npm test --workspace=shared",
+    "codegen": "npm start --workspace=codegen"
+  },
+  "keywords": [],
+  "author": "fauzi@staffinc.co",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@faker-js/faker": "^8.4.1",
+    "date-fns": "^3.6.0",
+    "dotenv": "^16.4.5",
+    "lodash": "^4.17.21",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.5.4"
+  },
+  "lint-staged": {
+    "*.{js,ts}": [
+      "eslint --cache --fix",
+      "prettier --write"
+    ],
+    "*.{js,css,md}": "prettier --write"
+  },
+  "workspaces": [
+    "core",
+    "components",
+    "teams/*",
+    "domain/*",
+    "codegen"
+  ],
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.1.0",
+    "@eslint/js": "^9.9.0",
+    "@types/lodash": "^4.17.7",
+    "@types/node": "^22.2.0",
+    "@typescript-eslint/eslint-plugin": "^8.1.0",
+    "app-root-path": "^3.1.0",
+    "eslint": "^9.9.0",
+    "eslint-config-prettier": "^9.1.0",
+    "husky": "^9.1.4",
+    "lint-staged": "^15.2.8",
+    "prettier": "^3.3.3"
+  }
+}
