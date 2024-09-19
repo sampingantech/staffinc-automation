@@ -17,7 +17,7 @@ const payrollReports = new PayrollReports(token.get('ADMIN'))
 const payrollReportsAgents = new PayrollReportsAgents(token.get('ADMIN'))
 
 export async function createPayrollReports(branchId = [1823], payrollGroupId = [1742]) {
-    let payrollReportId;
+    let payrollReportId: {report_id: string, id: number} = {report_id: '', id: 0};
     await test.step('Create new payroll report', async () => {
         const createPayrollReportAgents = payrollReportsAgents.data.payrollreportsAgentsPayload({branch_ids: branchId, payroll_group_ids: payrollGroupId})
         const createPayrollReportsAgentsResponse = await payrollReportsAgents.createPayrollReportsAgents(createPayrollReportAgents)
@@ -29,7 +29,8 @@ export async function createPayrollReports(branchId = [1823], payrollGroupId = [
         const createPayrollreports = payrollReports.data.payrollReportsPayload(agentData, branchId[0], payrollGroupId[0])
         const createPayrollReportsResponse = await payrollReports.createPayrollReports(createPayrollreports)
         expect(createPayrollReportsResponse).isCorrectResponse(200, payrollReports.schema.payrollReport())
-        payrollReportId = createPayrollReportsResponse.data.report_id
+        payrollReportId.report_id = createPayrollReportsResponse.data.report_id
+        payrollReportId.id = createPayrollReportsResponse.data.id
     })
     return payrollReportId
 }

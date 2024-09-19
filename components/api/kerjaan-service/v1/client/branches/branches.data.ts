@@ -11,10 +11,10 @@ export class branchesData {
                 107.013564,
                 -6.2491162
             ],
-            radius: 5,
+            radius: 5, //
             enable_geofence: true,
             location_detail: "RSU Bella",
-            selfie_instruction: "",
+            selfie_instruction: "", //
             attendance_type: "agent_selfie_validation",
             require_checkout: false,
             effective_working_days: [
@@ -24,8 +24,8 @@ export class branchesData {
                 4,
                 5
             ],
-            start_time_utc: "01:00:55",
-            end_time_utc: "10:00:55",
+            start_time_utc: "01:00:55", //
+            end_time_utc: "10:00:55", //
             attendance_source: "staffinc_work",
             province_id: 12,
             city_id: 720,

@@ -81,11 +81,13 @@ export class Token {
                     const { email, password } = credentials as { email: string; password: string };
                     console.log(`Requesting token for ${platform} - ${role} with email: ${email} and password: ${password}`);
                     const creds = await this.requestNewToken(platform, email, password, role)
+                    // @ts-ignore
                     accountRequests.push(creds);
                 } else if (platform == "APPS") {
                     const { phone } = credentials as { phone: string };
                     console.log(`Requesting token for ${platform} - ${role} with phone number ${phone}`);
                     const creds = await this.requestNewToken(platform, phone, this.staticOTP, role)
+                    // @ts-ignore
                     accountRequests.push(creds);
                 }
 

@@ -8,17 +8,23 @@ import {
     createPayrollReports,
     getPayrollReportDetails
 } from "components/shared/steps/payroll-reports/payroll-reports.step";
+import {createDisbursement} from "components/shared/steps/disbursements/create.disbursement.step";
+import {E2EStep} from "components/shared/steps/e2e.step";
 
 test('End to End', async () => {
     const branchId = await createBranch()
     const payrollGroupId = await createPayrollGroups(branchId)
     const phoneNumber = await createEmployee(branchId, payrollGroupId)
-    await createAttendances({
-        phoneNumber
-    })
+    await createAttendances({phoneNumber})
     const listAttendance = await getBranchAttendances(branchId)
     await approveAttendances(listAttendance)
     const payrollReportId = await createPayrollReports([branchId], [payrollGroupId])
-    const getPayrollReportDetail = await getPayrollReportDetails(payrollReportId)
-    await approvePayrollReport(payrollReportId, getPayrollReportDetail)
+    const getPayrollReportDetail = await getPayrollReportDetails(payrollReportId.report_id)
+    await approvePayrollReport(payrollReportId.report_id, getPayrollReportDetail)
+    const payrollReportDetailId = getPayrollReportDetail.data.data.map((item) => item.id)
+    const disbursement = await createDisbursement([payrollReportId.id], payrollReportDetailId)
+})
+
+test('E2E Component', async () => {
+    const e2e = await E2EStep({})
 })

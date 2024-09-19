@@ -2,7 +2,6 @@
 import yargs from 'yargs/yargs'
 import { hideBin } from 'yargs/helpers'
 import { prismaModule } from './modules/prisma'
-import {generateEnvFile} from "../generate-env"
 import getEnvFile from "../consul";
 
 function MOFIRunnerCommands() {

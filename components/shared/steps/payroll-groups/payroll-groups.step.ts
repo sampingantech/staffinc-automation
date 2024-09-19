@@ -4,10 +4,10 @@ import { expect, test } from 'core'
 
 const payrollGroups = new PayrollGroups(token.get('ADMIN'))
 
-export async function createPayrollGroups(branchId=1846) {
+export async function createPayrollGroups(branchId=1846, clientId=2351) {
     let payrollGroupId: number
     await test.step('Create new payroll group', async () => {
-        const createPayrollGroupsPayload = payrollGroups.data.createPayrollGroup(branchId)
+        const createPayrollGroupsPayload = payrollGroups.data.createPayrollGroup(branchId, clientId)
         const createPayrollGroupResponse = await payrollGroups.createPayrollGroups(createPayrollGroupsPayload)
         expect(createPayrollGroupResponse).isCorrectResponse(200, payrollGroups.schema.postCreatePayrollGroup())
         payrollGroupId = createPayrollGroupResponse.data.id
