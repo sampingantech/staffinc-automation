@@ -9,7 +9,8 @@
     "schema:generate": "json-to-zod -s temp.json -t temp.schema.ts",
     "test:platform": "npm test --workspace=platform",
     "test:shared": "npm test --workspace=shared",
-    "codegen": "npm start --workspace=codegen"
+    "codegen": "npm start --workspace=codegen",
+    "env:get": "npm start --workspace=core get-env"
   },
   "keywords": [],
   "author": "fauzi@staffinc.co",
@@ -19,6 +20,7 @@
     "date-fns": "^3.6.0",
     "dotenv": "^16.4.5",
     "lodash": "^4.17.21",
+    "moment-timezone": "^0.5.45",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.5.4"

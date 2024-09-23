@@ -10,17 +10,21 @@ dotenv.config();
 export class Token {
     private tokenPath = resolve('/tokens.json');
     private staffincSuite = new StaffincSuite();
+    private staticOTP = 8000;
 
     async requestNewToken(
         platform: string,
         email: string,
-        password: string,
+        password: string | number,
         idRole: string
     ): Promise<{ [key: string]: string } | { errorCase: string; response: any }> {
         try {
             switch (platform) {
                 case 'STAFFINC_SUITE':
-                    return await this.staffincSuite.getToken(email, password, idRole);
+                    return await this.staffincSuite.getToken(email, password, idRole, platform);
+                    break;
+                case 'APPS':
+                    return await this.staffincSuite.getToken(email, this.staticOTP, idRole, platform);
                 default:
                     console.log(`Platform not found: ${platform}. Skip generating token.`);
                     return;
@@ -39,14 +43,14 @@ export class Token {
         const accountData: accountEnv = {};
 
         for (const key in process.env) {
-            const match = key.match(/(\w+)_(\w+)_(EMAIL|PASSWORD)/);
+            const match = key.match(/(\w+)_(\w+)_(EMAIL|PASSWORD|PHONE)/);
             if (match) {
                 const [, platform, role, type] = match;
                 if (!accountData[platform]) {
                     accountData[platform] = {};
                 }
                 if (!accountData[platform][role]) {
-                    accountData[platform][role] = { email: '', password: '' };
+                    accountData[platform][role] = { email: '', password: '', phone: '' };
                 }
                 accountData[platform][role][type.toLowerCase()] = process.env[key] || '';
             }
@@ -54,9 +58,12 @@ export class Token {
 
         for (const platform in accountData) {
             for (const role in accountData[platform]) {
-                const { email, password } = accountData[platform][role];
-                if (!email || !password) {
-                    throw new Error(`No account found for ${platform} - ${role}`);
+                const { email, password, phone } = accountData[platform][role];
+                if (platform === "APPS" ) {
+                    if (!phone) throw new Error(`No account found for ${platform} - ${role}`);
+                }
+                if (platform === "STAFFINC_SUITE") {
+                    if (!email || !password) throw new Error(`No account found for ${platform} - ${role}`);
                 }
             }
         }
@@ -70,11 +77,18 @@ export class Token {
 
         for (const [platform, accounts] of Object.entries(accountData)) {
             for (const [role, credentials] of Object.entries(accounts)) {
-                const { email, password } = credentials as { email: string; password: string };
-                console.log(`Requesting token for ${platform} - ${role} with email: ${email} and password: ${password}`);
-                accountRequests.push(
-                    this.requestNewToken(platform, email, password, role)
-                );
+                if (platform == "STAFFINC_SUITE") {
+                    const { email, password } = credentials as { email: string; password: string };
+                    console.log(`Requesting token for ${platform} - ${role} with email: ${email} and password: ${password}`);
+                    const creds = await this.requestNewToken(platform, email, password, role)
+                    accountRequests.push(creds);
+                } else if (platform == "APPS") {
+                    const { phone } = credentials as { phone: string };
+                    console.log(`Requesting token for ${platform} - ${role} with phone number ${phone}`);
+                    const creds = await this.requestNewToken(platform, phone, this.staticOTP, role)
+                    accountRequests.push(creds);
+                }
+
             }
         }
 

@@ -11,7 +11,8 @@
   },
   "scripts": {
     "start": "ts-node index.ts",
-    "prisma:generate": ""
+    "prisma:generate": "",
+    "get-env": "ts-node path/to/your/script/index.ts"
   },
   "author": "",
   "license": "ISC",

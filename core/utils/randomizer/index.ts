@@ -8,7 +8,7 @@ export class Randomizer extends Faker {
     }
 
     personName(gender: 'male' | 'female' = 'male') {
-        return this.person.fullName({ sex: gender })
+        return this.person.firstName(gender) + ' ' + this.person.lastName(gender)
     }
 
     uuid() {

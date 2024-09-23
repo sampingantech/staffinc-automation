@@ -3,6 +3,7 @@ export type accountEnv = {
         [role: string]: {
             email: string;
             password: string;
+            phone: string
         };
     };
 };

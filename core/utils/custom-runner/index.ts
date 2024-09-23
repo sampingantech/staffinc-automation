@@ -2,6 +2,8 @@
 import yargs from 'yargs/yargs'
 import { hideBin } from 'yargs/helpers'
 import { prismaModule } from './modules/prisma'
+import {generateEnvFile} from "../generate-env"
+import getEnvFile from "../consul";
 
 function MOFIRunnerCommands() {
     yargs(hideBin(process.argv))
@@ -16,6 +18,21 @@ function MOFIRunnerCommands() {
             (yargs) => {
                 const command = yargs.command as string
                 prismaModule.init(command)
+            }
+        )
+        .command(
+            'get-env <environment>',
+            'Generate .env files from consul.',
+            (yargs) => {
+                yargs.positional('environment', {
+                    type: 'string',
+                    demandOption: true,
+                    choices: ['development', 'staging'],
+                })
+            },
+            async (yargs) => {
+                const env = yargs.environment as string
+                await getEnvFile(env)
             }
         )
         .demandCommand()
