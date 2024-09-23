@@ -1,0 +1,19 @@
+#Integrating with services
+ARG arg
+
+COPY id_rsa /root/.ssh/
+RUN chmod 600 -R /root/.ssh/id_rsa
+
+RUN mkdir -p /home/node/app/
+
+WORKDIR /home/node/app
+
+COPY package*.json ./
+COPY . .
+RUN rm -rf /root/.npm/_cacache
+RUN npm cache clean --force
+RUN npm install -g npm@8.19.3
+RUN npm install
+RUN npm run prisma:generate
+
+RUN if [ -z "$arg" ] ; then echo Argument not provided ; else sh $arg 2>&1; fi

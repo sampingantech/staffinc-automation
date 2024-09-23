@@ -1,9 +1,42 @@
 import XLSX, { BookType, WritingOptions } from 'xlsx';
 import path from 'path';
 import fs from 'fs';
+import axios from 'axios';
 
 class Spreadsheet {
-    // eslint-disable-next-line class-methods-use-this
+    async downloadXlsx(url: string, filename: string): Promise<void> {
+        const filePath = path.join('.cache', filename);
+
+        this.deleteFileIfExists(filePath);
+
+        try {
+            await this.downloadFile(url, filePath);
+            console.log(`File downloaded and saved to ${filePath}`);
+        } catch (error) {
+            console.error('Error downloading the file:', error);
+        }
+    }
+
+    private deleteFileIfExists(filePath: string): void {
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath); // Menghapus file jika ada
+            console.log(`Existing file deleted: ${filePath}`);
+        }
+    }
+
+    private async downloadFile(url: string, filePath: string): Promise<void> {
+        if (!fs.existsSync('.cache')) {
+            fs.mkdirSync('.cache', { recursive: true });
+        }
+
+        const response = await axios.get(url, {
+            responseType: 'arraybuffer',
+        });
+
+        fs.writeFileSync(filePath, response.data);
+    }
+    
+// eslint-disable-next-line class-methods-use-this
     getSpreadsheetData(filePath: string, sheetName = '') {
         // check file format
         const ext = path.extname(filePath);
