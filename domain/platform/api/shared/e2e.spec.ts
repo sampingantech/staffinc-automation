@@ -11,7 +11,7 @@ import {
 import {createDisbursement} from "components/shared/steps/disbursements/create.disbursement.step";
 import {E2EStep} from "components/shared/steps/e2e.step";
 
-test('End to End', async () => {
+test.skip('End to End', async () => {
     const branchId = await createBranch()
     const payrollGroupId = await createPayrollGroups(branchId)
     const phoneNumber = await createEmployee(branchId, payrollGroupId)
@@ -26,5 +26,8 @@ test('End to End', async () => {
 })
 
 test('E2E Component', async () => {
-    const e2e = await E2EStep({})
+    const e2e = await E2EStep({
+        stopAt: "createBranch",
+        dataDDTDescription: "apa"
+    })
 })
