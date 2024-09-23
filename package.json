@@ -23,7 +23,8 @@
     "moment-timezone": "^0.5.45",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.5.4"
+    "typescript": "^5.5.4",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.2/xlsx-0.20.2.tgz"
   },
   "lint-staged": {
     "*.{js,ts}": [
