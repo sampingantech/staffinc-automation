@@ -1,0 +1,3067 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/sampingan_dev"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DB_SAMPINGAN_DEV")
+}
+
+model agent_addresses {
+  id                        BigInt             @id @default(autoincrement())
+  agent_id                  BigInt
+  name                      String             @db.VarChar(75)
+  address                   String             @db.VarChar(300)
+  city                      String             @db.VarChar(150)
+  postal_code               String             @db.VarChar(10)
+  created_at                DateTime           @default(now()) @db.Timestamptz(6)
+  updated_at                DateTime?          @db.Timestamptz(6)
+  deleted_at                DateTime?          @db.Timestamptz(6)
+  village_id                BigInt?
+  phone_number              String             @default("") @db.VarChar(75)
+  phone_number_country_code String             @default("") @db.VarChar(10)
+  email                     String             @default("") @db.VarChar(75)
+  agents                    agents             @relation(fields: [agent_id], references: [id], onDelete: Cascade)
+  reseller_villages         reseller_villages? @relation(fields: [village_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "village_id_fkey")
+}
+
+model agent_documents {
+  category     agent_documents_category_enum
+  file_url     String?                       @db.VarChar(255)
+  value        String?                       @db.VarChar(100)
+  has_document Boolean?                      @default(false)
+  agent_id     BigInt
+  agents       agents                        @relation(fields: [agent_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_agent")
+
+  @@id([category, agent_id])
+}
+
+model agent_experience_by_categories {
+  id                BigInt    @id @default(autoincrement())
+  agent_id          BigInt
+  job_categories_id String    @db.VarChar(24)
+  experiences       Int
+  deleted_at        DateTime? @db.Timestamptz(6)
+}
+
+model agent_facilities {
+  category            agent_facilities_category_enum
+  has_facility        Boolean?                       @default(false)
+  agent_id            BigInt
+  job_requirement_ids BigInt[]
+  agents              agents                         @relation(fields: [agent_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_agent")
+
+  @@id([category, agent_id])
+}
+
+model agent_job_categories_preferences {
+  agent_id          BigInt
+  job_category_id   String            @db.VarChar(24)
+  deleted_at        DateTime?         @db.Timestamptz(6)
+  agents            agents            @relation(fields: [agent_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_agent")
+  pt_job_categories pt_job_categories @relation(fields: [job_category_id], references: [oid__id], onDelete: NoAction, onUpdate: NoAction, map: "fk_job_category")
+
+  @@id([agent_id, job_category_id])
+}
+
+model agent_professional_skills {
+  agent_id            BigInt
+  skill_id            BigInt
+  deleted_at          DateTime?           @db.Timestamptz(6)
+  agents              agents              @relation(fields: [agent_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_agent")
+  professional_skills professional_skills @relation(fields: [skill_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_skill")
+
+  @@id([agent_id, skill_id])
+}
+
+model agent_work_location_preferences {
+  agent_id   BigInt
+  city_id    BigInt
+  deleted_at DateTime? @db.Timestamptz(6)
+  agents     agents    @relation(fields: [agent_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_agent")
+  cities     cities    @relation(fields: [city_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_city")
+
+  @@id([agent_id, city_id])
+  @@index([agent_id], map: "agent_work_location_preferences_agent_idx")
+}
+
+model agent_working_experiences {
+  id                     BigInt          @id @default(autoincrement())
+  work_industry_id       BigInt
+  agent_id               BigInt
+  job_position           String          @db.VarChar(150)
+  company_name           String          @db.VarChar(200)
+  start_year             Int             @db.SmallInt
+  end_year               Int?            @db.SmallInt
+  job_descriptions       String[]        @default([]) @db.VarChar(200)
+  created_at             DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at             DateTime?       @db.Timestamptz(6)
+  deleted_at             DateTime?       @db.Timestamptz(6)
+  job_categories_id      String?         @db.VarChar(24)
+  job_specializations_id BigInt?
+  job_levels_id          Int?
+  agents                 agents          @relation(fields: [agent_id], references: [id], onDelete: Cascade)
+  work_industries        work_industries @relation(fields: [work_industry_id], references: [id], onDelete: Cascade)
+
+  @@index([agent_id], map: "agent_work_exp_agent_idx")
+  @@index([job_categories_id], map: "agent_working_experiences_job_category")
+}
+
+model agents {
+  id                                       BigInt                                     @id @default(autoincrement())
+  phone_number                             String                                     @unique @db.VarChar(40)
+  status                                   agent_status_enum
+  roles                                    String[]
+  group_code                               String                                     @default("") @db.VarChar(4)
+  push_token                               String                                     @default("") @db.VarChar(350)
+  name                                     String                                     @default("") @db.VarChar(60)
+  email                                    String                                     @default("") @db.VarChar(150)
+  gender                                   agent_gender_enum?
+  citizenship_number                       String                                     @default("") @db.VarChar(36)
+  address                                  String                                     @default("")
+  domicile                                 String                                     @default("") @db.VarChar(80)
+  occupation                               String                                     @default("") @db.VarChar(80)
+  date_of_birth                            DateTime?                                  @db.Date
+  year_of_experience                       String                                     @default("") @db.VarChar(10)
+  bank_account_name                        String                                     @default("") @db.VarChar(80)
+  bank_account_number                      String                                     @default("") @db.VarChar(80)
+  operational_city                         String                                     @default("") @db.VarChar(80)
+  allocated_time                           Int                                        @default(0)
+  expected_income                          Int                                        @default(0)
+  is_default_otp                           Boolean                                    @default(false)
+  created_at                               DateTime                                   @db.Timestamptz(6)
+  updated_at                               DateTime                                   @db.Timestamptz(6)
+  deleted_at                               DateTime?                                  @db.Timestamptz(6)
+  reference_id                             String                                     @db.VarChar(24)
+  photo_url                                String                                     @default("") @db.VarChar(350)
+  bank_code                                String                                     @default("") @db.VarChar(50)
+  bank_name                                String                                     @default("") @db.VarChar(180)
+  country_code                             String                                     @default("") @db.VarChar(5)
+  deleted_by                               String                                     @default("") @db.VarChar(24)
+  education                                String                                     @default("") @db.VarChar(100)
+  files                                    Json?
+  npwp                                     String                                     @default("") @db.VarChar(200)
+  privacy_policy_sign_date                 DateTime?                                  @db.Timestamptz(6)
+  privacy_policy_version                   Int                                        @default(0) @db.SmallInt
+  project_favorite_ids                     String[]
+  rejection_detail                         String                                     @default("")
+  rejection_reasons                        String[]
+  tos_sign_date                            DateTime?                                  @db.Timestamptz(6)
+  tos_version                              Int                                        @default(0) @db.SmallInt
+  wa_id                                    String                                     @default("") @db.VarChar(25)
+  profession_id                            BigInt?
+  last_salary_amount                       BigInt                                     @default(0)
+  education_period_start_year              BigInt?
+  education_period_end_year                BigInt?
+  education_major_id                       BigInt?
+  formal_education_level_id                BigInt?
+  total_working_experience_year            BigInt?                                    @default(0)
+  employment_type_preferences              project_job_posts_employment_type_enum[]   @default([])
+  has_no_work_experience                   Boolean?
+  domicile_city_id                         BigInt?
+  agent_type                               agent_type_enum?                           @default(registered_agent)
+  verification_version                     String?                                    @db.VarChar(100)
+  resend_at                                DateTime?                                  @db.Timestamptz(6)
+  has_verified_email                       Boolean?                                   @default(false)
+  verification_email_token                 String?                                    @unique @db.Uuid
+  has_subscription_newsletter              Boolean?                                   @default(true)
+  subscription_newsletter_token            String?                                    @db.Uuid
+  password                                 String                                     @default("") @db.VarChar(255)
+  job_availability_status                  job_availability_status_enum?              @default(EMPTY_ENUM_VALUE)
+  personal_info_updated_at                 DateTime?                                  @db.Timestamptz(6)
+  agent_addresses                          agent_addresses[]
+  agent_documents                          agent_documents[]
+  agent_facilities                         agent_facilities[]
+  agent_job_categories_preferences         agent_job_categories_preferences[]
+  agent_professional_skills                agent_professional_skills[]
+  agent_work_location_preferences          agent_work_location_preferences[]
+  agent_working_experiences                agent_working_experiences[]
+  cities                                   cities?                                    @relation(fields: [domicile_city_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "domicile_city_id_fkey")
+  education_majors                         education_majors?                          @relation(fields: [education_major_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "education_major_id_fkey")
+  formal_education_levels                  formal_education_levels?                   @relation(fields: [formal_education_level_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "formal_education_level_id_fkey")
+  professions                              professions?                               @relation(fields: [profession_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "profession_id_fkey")
+  bookmarked_agents                        bookmarked_agents[]
+  inbox_notification_agents                inbox_notification_agents[]
+  notification_push_notification_audiences notification_push_notification_audiences[]
+  orders                                   orders[]
+  otps                                     otps[]
+  pickup_points                            pickup_points[]
+  project_agents                           project_agents[]
+  project_job_offer_histories              project_job_offer_histories[]
+  project_job_post_applications            project_job_post_applications[]
+  task_submissions                         task_submissions[]
+  wallet_transactions                      wallet_transactions[]
+  withdraw_requests                        withdraw_requests[]
+
+  @@index([domicile(ops: raw("gin_trgm_ops"))], map: "agent_domicile_trigram_idx", type: Gin)
+  @@index([employment_type_preferences], map: "agent_employment_type_preferences_idx", type: Gin)
+  @@index([reference_id], map: "agent_reference_id_key")
+  @@index([total_working_experience_year], map: "agent_total_work_exp_idx")
+  @@index([formal_education_level_id], map: "agents_formal_education_level_id")
+}
+
+model articles {
+  id                 BigInt           @id @default(autoincrement())
+  project_product_id BigInt
+  project_id         BigInt
+  name               String           @db.VarChar(160)
+  buy_price          BigInt
+  sell_price         BigInt
+  stock              BigInt           @default(0)
+  created_at         DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime?        @db.Timestamptz(6)
+  deleted_at         DateTime?        @db.Timestamptz(6)
+  photo_url          String           @default("") @db.VarChar(350)
+  length_in_cm       BigInt           @default(0)
+  width_in_cm        BigInt           @default(0)
+  height_in_cm       BigInt           @default(0)
+  weight_in_gram     BigInt           @default(0)
+  projects           projects         @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  project_products   project_products @relation(fields: [project_product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  order_articles     order_articles[]
+}
+
+model audit_logs {
+  id          BigInt    @id @default(autoincrement())
+  username    String
+  ip_address  String
+  resource    String
+  resource_id String
+  event_name  String
+  detail      String
+  created_at  DateTime? @db.Timestamptz(6)
+}
+
+model audit_trails {
+  id          BigInt                   @id @default(autoincrement())
+  user_id     BigInt
+  object_type String                   @db.VarChar(100)
+  action      audit_trails_action_enum
+  new_data    Json
+  old_data    Json
+  created_at  DateTime                 @db.Timestamptz(6)
+  updated_at  DateTime?                @db.Timestamptz(6)
+}
+
+model auth_login_audit {
+  id         BigInt          @id @default(autoincrement())
+  user_id    String?         @db.VarChar(50)
+  type       user_type_enum?
+  ip_address String?         @db.VarChar(45)
+  user_agent String?         @db.VarChar(1000)
+  hash       String?         @db.VarChar(64)
+  created_at DateTime        @db.Timestamptz(6)
+
+  @@index([hash, type, user_id])
+}
+
+model auth_refresh_token {
+  id         BigInt          @id @default(autoincrement())
+  type       user_type_enum?
+  user_id    String?         @db.VarChar(50)
+  token      String?         @db.VarChar(64)
+  created_at DateTime        @db.Timestamptz(6)
+
+  @@index([token])
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model auth_user_preference_store {
+  id         BigInt         @default(autoincrement())
+  type       user_type_enum
+  user_id    String         @db.VarChar(50)
+  data       Json           @default("{}")
+  created_at DateTime       @db.Timestamptz(6)
+  updated_at DateTime       @db.Timestamptz(6)
+
+  @@index([type, user_id])
+  @@ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model awsdms_apply_exceptions {
+  TASK_NAME   String   @db.VarChar(128)
+  TABLE_OWNER String   @db.VarChar(128)
+  TABLE_NAME  String   @db.VarChar(128)
+  ERROR_TIME  DateTime @db.Timestamp(6)
+  STATEMENT   String
+  ERROR       String
+
+  @@ignore
+}
+
+model awsdms_ddl_audit {
+  c_key    BigInt    @id @default(autoincrement())
+  c_time   DateTime? @db.Timestamp(6)
+  c_user   String?   @db.VarChar(64)
+  c_txn    String?   @db.VarChar(16)
+  c_tag    String?   @db.VarChar(24)
+  c_oid    Int?
+  c_name   String?   @db.VarChar(64)
+  c_schema String?   @db.VarChar(64)
+  c_ddlqry String?
+}
+
+model banners {
+  id         BigInt    @id @default(autoincrement())
+  url        String    @db.VarChar(350)
+  rank       Int
+  title      String    @unique @db.VarChar(80)
+  deep_link  String    @db.VarChar(300)
+  is_active  Boolean   @default(false)
+  created_at DateTime  @db.Timestamptz(6)
+  updated_at DateTime? @db.Timestamptz(6)
+  deleted_at DateTime? @db.Timestamptz(6)
+}
+
+model blaster_configs {
+  id         BigInt    @id @default(autoincrement())
+  key        String    @db.VarChar(100)
+  value      String    @db.VarChar(200)
+  is_active  Boolean   @default(true)
+  created_at DateTime? @db.Timestamptz(6)
+  updated_at DateTime? @db.Timestamptz(6)
+}
+
+model bookmarked_agents {
+  id                BigInt                        @id @default(autoincrement())
+  client_id         BigInt
+  agent_id          BigInt
+  created_at        DateTime                      @db.Timestamptz(6)
+  deleted_at        DateTime?                     @db.Timestamptz(6)
+  bookmarked_status bookmarked_agent_status_enum? @default(favorite)
+  agents            agents                        @relation(fields: [agent_id], references: [id], onDelete: Cascade)
+  clients           clients                       @relation(fields: [client_id], references: [id], onDelete: Cascade)
+}
+
+model cities {
+  id                                                   BigInt                            @id @default(autoincrement())
+  name                                                 String                            @db.VarChar(80)
+  is_hidden                                            Boolean                           @default(false)
+  province_id                                          Int?
+  is_valid_administrative_area                         Boolean?                          @default(false)
+  base_city_id                                         BigInt?
+  base_city_name                                       String?                           @db.VarChar(100)
+  distance_in_km                                       Float?
+  ranking                                              BigInt?
+  agent_work_location_preferences                      agent_work_location_preferences[]
+  agents                                               agents[]
+  provinces                                            provinces?                        @relation(fields: [province_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "province_id_fkey")
+  neighbor_cities_neighbor_cities_base_city_idTocities neighbor_cities[]                 @relation("neighbor_cities_base_city_idTocities")
+  neighbor_cities_neighbor_cities_city_idTocities      neighbor_cities[]                 @relation("neighbor_cities_city_idTocities")
+  project_city_criterias                               project_city_criterias[]          @ignore
+  projects                                             projects[]
+
+  @@unique([name, province_id], map: "city_name_province_unique_key")
+  @@index([name], map: "city_name_key")
+}
+
+model client_accounts {
+  id                                   BigInt                      @id @default(autoincrement())
+  client_id                            BigInt
+  email                                String                      @db.VarChar(100)
+  password                             String                      @default("") @db.VarChar(128)
+  name                                 String                      @db.VarChar(80)
+  title                                String                      @default("") @db.VarChar(20)
+  country_code                         String                      @default("+62") @db.VarChar(5)
+  phone_number                         String?                     @db.VarChar(20)
+  created_at                           DateTime                    @default(now()) @db.Timestamptz(6)
+  updated_at                           DateTime?                   @db.Timestamptz(6)
+  deleted_at                           DateTime?                   @db.Timestamptz(6)
+  reference_client_id                  String?                     @db.VarChar(24)
+  deletion_reason                      String                      @default("") @db.VarChar(200)
+  reference_id                         String                      @default("") @db.VarChar(24)
+  alt_phone_number                     String                      @default("") @db.VarChar(24)
+  roles                                String[]                    @default([]) @db.VarChar
+  email_verification_token             String?                     @db.Uuid
+  status                               client_account_status_enum? @default(pending_verification)
+  email_verification_token_expire_time DateTime?                   @db.Timestamptz(6)
+  clients                              clients                     @relation(fields: [client_id], references: [id], onDelete: Cascade)
+}
+
+model client_kerjaans {
+  id                  BigInt    @id @default(autoincrement())
+  client_id           BigInt
+  kerjaan_client_id   BigInt
+  kerjaan_client_name String    @db.VarChar(200)
+  created_at          DateTime? @db.Timestamptz(6)
+  updated_at          DateTime? @db.Timestamptz(6)
+  clients             clients   @relation(fields: [client_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_client_id")
+}
+
+model clients {
+  id                                     BigInt                           @id @default(autoincrement())
+  name                                   String                           @db.VarChar(80)
+  tax_id                                 String?                          @db.VarChar(50)
+  logo_url                               String                           @db.VarChar(350)
+  website_url                            String?                          @db.VarChar(350)
+  address                                String
+  city                                   String                           @db.VarChar(100)
+  country                                String                           @db.VarChar(100)
+  description                            String
+  industry                               String                           @db.VarChar(100)
+  readable_id                            Int
+  created_at                             DateTime                         @default(now()) @db.Timestamptz(6)
+  updated_at                             DateTime?                        @db.Timestamptz(6)
+  deleted_at                             DateTime?                        @db.Timestamptz(6)
+  reference_id                           String?                          @db.VarChar(24)
+  contacts                               Json?                            @default("[]") @db.Json
+  working_area                           Json?                            @default("[]") @db.Json
+  latitude                               Float?
+  longitude                              Float?
+  verification_status                    client_verification_status_enum? @default(unverified)
+  verification_reject_reasons            String[]
+  legal_document_url                     String?                          @default("") @db.VarChar(350)
+  total_employee_from                    Int?                             @default(0)
+  total_employee_to                      Int?                             @default(0)
+  industry_id                            BigInt?
+  is_has_kerjaan_client                  Boolean?                         @default(false)
+  is_eligible_to_interview_module        Boolean?                         @default(false)
+  is_need_onboard_contract_configuration Boolean                          @default(false)
+  bookmarked_agents                      bookmarked_agents[]
+  client_accounts                        client_accounts[]
+  client_kerjaans                        client_kerjaans[]
+  work_industries                        work_industries?                 @relation(fields: [industry_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "industry_id_fkey")
+  operational_area                       operational_area[]
+  project_job_post_interviews            project_job_post_interviews[]
+  projects                               projects[]
+  reseller_invoices                      reseller_invoices[]
+
+  @@index([name], map: "client_name_idx")
+  @@index([reference_id], map: "client_reference_id_key")
+}
+
+model docdb_clients {
+  oid__id               String    @id @db.VarChar(24)
+  logo                  String?
+  name                  String?
+  taxId                 String?
+  array_pointOfContacts String?
+  array_workingArea     String?
+  description           String?
+  address               String?
+  city                  String?
+  country               String?
+  industry              String?
+  website               String?
+  readableId            String?
+  createdAt             DateTime? @db.Timestamp(6)
+  updatedAt             DateTime? @db.Timestamp(6)
+  v                     Int?      @map("__v")
+  accountHolderName     String?
+  bankAccountNumber     String?
+  bankCode              String?
+  paymentMethod         String?
+}
+
+model docdb_clientusers {
+  oid__id      String    @id @db.VarChar(24)
+  isFirstLogin Boolean?
+  array_roles  String?
+  isDeleted    Boolean?
+  name         String?
+  email        String?
+  phoneNumber  String?
+  password     String?
+  oid_client   String?   @db.VarChar(24)
+  readableId   String?
+  createdAt    DateTime? @db.Timestamp(6)
+  updatedAt    DateTime? @db.Timestamp(6)
+  v            Int?      @map("__v")
+  deleteReason String?
+  removeDate   DateTime? @db.Timestamp(6)
+}
+
+model docdb_users {
+  oid__id                  String    @id @db.VarChar(24)
+  array_cityOfOperations   String?
+  yearsOfExperience        String?
+  timeAllocatedToSampingan Int?
+  expectedIncome           Int?
+  array_types              String?
+  status                   String?
+  array_rejectReasons      String?
+  phoneNumber              String?
+  countryCode              String?
+  name                     String?
+  gender                   String?
+  dob                      DateTime? @db.Timestamp(6)
+  areaOfDomicile           String?
+  cityOfDomicile           String?
+  email                    String?
+  readableId               String?
+  array_files              String?
+  createdAt                DateTime? @db.Timestamp(6)
+  updatedAt                DateTime? @db.Timestamp(6)
+  v                        Int?      @map("__v")
+  array_roles              String?
+  ktpNumber                String?
+  oid_client               String?   @db.VarChar(24)
+  isDeleted                Boolean?
+  isHaveNpwp               Boolean?
+  isUpdatedPassword        Boolean?
+  password                 String?
+  array_projectFavorites   String?
+  array_suspendedHistory   String?
+  pushToken                String?
+  bankName                 String?
+  deleteReason             String?
+  npwpNumber               String?
+  originPhoneNumber        String?
+  oid_removeBy             String?   @db.VarChar(24)
+  removeDate               DateTime? @db.Timestamp(6)
+  currentOccupation        String?
+  userActionDetails        String?
+  address                  String?
+  idNumber                 String?
+  whatsappNumber           String?
+  termOfService            Int?
+  termOfServiceSignDate    DateTime? @db.Timestamp(6)
+  privacyPolicy            Int?
+  privacyPolicySignDate    DateTime? @db.Timestamp(6)
+  bankAccount              String?
+  bankAccountName          String?
+  bankCode                 String?
+  currentCity              String?
+  educationMajor           String?
+  lastEducation            String?
+  verificationUpdatedAt    DateTime? @db.Timestamp(6)
+  verificationVersion      String?
+}
+
+model education_majors {
+  id         BigInt    @id @default(autoincrement())
+  name       String    @unique @db.VarChar(150)
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at DateTime? @db.Timestamptz(6)
+  deleted_at DateTime? @db.Timestamptz(6)
+  agents     agents[]
+}
+
+model email_blaster_audiences {
+  id                      BigInt                  @id(map: "email_blaster_audience_pkey") @default(autoincrement())
+  schedule_id             BigInt
+  email                   String                  @db.VarChar(100)
+  name                    String                  @db.VarChar(100)
+  status                  String                  @db.VarChar(50)
+  created_at              DateTime                @db.Timestamptz(6)
+  updated_at              DateTime?               @db.Timestamptz(6)
+  failed_reason           String?
+  email_blaster_schedules email_blaster_schedules @relation(fields: [schedule_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_schedule")
+}
+
+model email_blaster_schedules {
+  id                      BigInt                    @id @default(autoincrement())
+  job_post_id             BigInt
+  template_id             BigInt
+  schedule_type           String                    @db.VarChar(100)
+  schedule_time           DateTime?                 @db.Timestamptz(6)
+  status                  String                    @db.VarChar(100)
+  start_at                DateTime?                 @db.Timestamptz(6)
+  end_at                  DateTime?                 @db.Timestamptz(6)
+  total_audience          Int?                      @default(0)
+  total_sent              Int?                      @default(0)
+  total_failed            Int?                      @default(0)
+  created_at              DateTime                  @db.Timestamptz(6)
+  updated_at              DateTime?                 @db.Timestamptz(6)
+  total_retry             Int?                      @default(0)
+  email_blaster_audiences email_blaster_audiences[]
+  email_blaster_templates email_blaster_templates   @relation(fields: [template_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_template")
+}
+
+model email_blaster_templates {
+  id                      BigInt                    @id @default(autoincrement())
+  subject                 String                    @db.VarChar(150)
+  content                 String
+  is_active               Boolean                   @default(true)
+  created_at              DateTime?                 @db.Timestamptz(6)
+  updated_at              DateTime?                 @db.Timestamptz(6)
+  email_blaster_schedules email_blaster_schedules[]
+}
+
+model email_notification_audiences {
+  id                          BigInt                             @id @default(autoincrement())
+  reference_id                String                             @db.VarChar(200)
+  request_id                  BigInt
+  recipient_to                String[]                           @db.VarChar(200)
+  recipient_cc                String[]                           @db.VarChar(200)
+  recipient_bcc               String[]                           @db.VarChar(200)
+  total_retry                 BigInt                             @default(0)
+  failed_reason               String?
+  status                      email_notification_audience_status @default(waiting)
+  callback_status             email_notification_callback_status @default(pending)
+  callback_error_response     String?
+  created_at                  DateTime                           @default(now()) @db.Timestamptz(6)
+  updated_at                  DateTime?                          @db.Timestamptz(6)
+  email_notification_requests email_notification_requests        @relation(fields: [request_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_request_id")
+
+  @@index([request_id], map: "email_notification_audiences_request_id_key")
+}
+
+model email_notification_requests {
+  id                           BigInt                            @id @default(autoincrement())
+  template_id                  BigInt
+  source                       String                            @db.VarChar(100)
+  arguments                    String[]
+  sender                       String?                           @db.VarChar(200)
+  provider                     email_notification_provider
+  subject                      String                            @db.VarChar(250)
+  schedule_type                email_notification_schedule_type
+  schedule_time                DateTime?                         @db.Timestamptz(6)
+  start_at                     DateTime?                         @db.Timestamptz(6)
+  end_at                       DateTime?                         @db.Timestamptz(6)
+  total_audience               BigInt                            @default(0)
+  total_sent                   BigInt                            @default(0)
+  total_failed                 BigInt                            @default(0)
+  is_need_success_callback     Boolean                           @default(false)
+  is_need_failed_callback      Boolean                           @default(false)
+  failed_reason                String?
+  status                       email_notification_request_status @default(waiting)
+  created_at                   DateTime                          @default(now()) @db.Timestamptz(6)
+  updated_at                   DateTime?                         @db.Timestamptz(6)
+  platform                     String?                           @db.VarChar(200)
+  email_notification_audiences email_notification_audiences[]
+  email_notification_templates email_notification_templates      @relation(fields: [template_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_template_id")
+}
+
+model email_notification_templates {
+  id                          BigInt                        @id @default(autoincrement())
+  name                        String                        @unique
+  content                     String
+  total_arguments             BigInt
+  is_active                   Boolean                       @default(false)
+  created_at                  DateTime                      @default(now()) @db.Timestamptz(6)
+  updated_at                  DateTime?                     @db.Timestamptz(6)
+  email_notification_requests email_notification_requests[]
+}
+
+model formal_education_levels {
+  id                BigInt              @id(map: "formal_education_level_pkey") @default(autoincrement())
+  level_name        String              @unique(map: "formal_education_level_level_name_key") @db.VarChar(200)
+  education_level   Int                 @db.SmallInt
+  created_at        DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime?           @db.Timestamptz(6)
+  deleted_at        DateTime?           @db.Timestamptz(6)
+  agents            agents[]
+  project_job_posts project_job_posts[]
+}
+
+model inbox_notification_agents {
+  id                    BigInt              @id @default(autoincrement())
+  agent_id              BigInt
+  inbox_notification_id BigInt
+  is_read               Boolean             @default(false)
+  is_mark_read          Boolean             @default(false)
+  created_at            DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime?           @db.Timestamptz(6)
+  deleted_at            DateTime?           @db.Timestamptz(6)
+  reference_id          String              @db.VarChar(24)
+  agents                agents              @relation(fields: [agent_id], references: [id], onDelete: Cascade)
+  inbox_notifications   inbox_notifications @relation(fields: [inbox_notification_id], references: [id], onDelete: Cascade)
+
+  @@index([agent_id], map: "inbox_notification_agents_agent_id_key")
+  @@index([deleted_at], map: "inbox_notification_agents_deleted_at_key")
+  @@index([inbox_notification_id], map: "inbox_notification_agents_inbox_notification_id_key")
+  @@index([reference_id], map: "inbox_notification_agents_reference_id_key")
+}
+
+model inbox_notification_criteria_targets {
+  id                       BigInt                               @id @default(autoincrement())
+  inbox_notification_id    BigInt
+  target_criteria_type     inbox_target_criteria_type_enum?
+  target_criteria_values   String[]
+  target_criteria_operator inbox_target_criteria_operator_enum?
+  is_sent                  Boolean                              @default(false)
+  inbox_notifications      inbox_notifications                  @relation(fields: [inbox_notification_id], references: [id], onDelete: Cascade)
+}
+
+model inbox_notifications {
+  id                                  BigInt                                 @id @default(autoincrement())
+  source                              String?                                @db.VarChar(200)
+  category                            String?                                @db.VarChar(200)
+  portal_notification_title           String?                                @db.VarChar(200)
+  apps_notification_title             String?                                @db.VarChar(200)
+  content                             String?
+  image_url                           String?                                @default("") @db.VarChar(350)
+  is_need_button                      Boolean                                @default(false)
+  button_title                        String?                                @db.VarChar(50)
+  button_type                         String?                                @db.VarChar(200)
+  button_action                       String?                                @db.VarChar(1024)
+  is_need_push_notification           Boolean?                               @default(false)
+  push_notification_title             String?                                @db.VarChar(250)
+  push_notification_message           String?                                @db.VarChar(2048)
+  schedule_type                       String?                                @db.VarChar(200)
+  schedule_date                       DateTime?                              @db.Timestamptz(6)
+  created_by                          BigInt?
+  updated_by                          BigInt?
+  target_agents                       BigInt[]
+  total_target                        BigInt?
+  created_at                          DateTime                               @default(now()) @db.Timestamptz(6)
+  updated_at                          DateTime?                              @db.Timestamptz(6)
+  deleted_at                          DateTime?                              @db.Timestamptz(6)
+  reference_id                        String                                 @db.VarChar(24)
+  button_title2                       String?                                @db.VarChar(50)
+  button_type2                        inbox_button_type_enum?
+  button_action2                      String?                                @db.VarChar(1024)
+  button_colour                       inbox_notification_button_colour_enum? @default(EMPTY_ENUM_VALUE)
+  button_colour2                      inbox_notification_button_colour_enum? @default(EMPTY_ENUM_VALUE)
+  inbox_notification_agents           inbox_notification_agents[]
+  inbox_notification_criteria_targets inbox_notification_criteria_targets[]
+
+  @@index([reference_id], map: "inbox_notifications_reference_id_key")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model job_application_logs {
+  application_id  BigInt
+  status_from     job_application_status_enum
+  status_to       job_application_status_enum
+  user_identifier String?                     @db.VarChar(255)
+  notes           String?                     @db.VarChar(255)
+  created_at      DateTime                    @db.Timestamptz(6)
+
+  @@index([application_id], map: "application_id_key")
+  @@ignore
+}
+
+model job_categories {
+  id                BigInt              @id @default(autoincrement())
+  name              String?             @unique @db.VarChar(100)
+  created_at        DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime?           @db.Timestamptz(6)
+  deleted_at        DateTime?           @db.Timestamptz(6)
+  project_job_posts project_job_posts[]
+}
+
+model job_levels {
+  id         Int       @id @default(autoincrement())
+  name       String?   @db.VarChar(50)
+  is_active  Boolean?  @default(true)
+  created_at DateTime? @db.Timestamp(6)
+  updated_at DateTime? @db.Timestamp(6)
+}
+
+model job_post_professional_skills {
+  job_post_id         BigInt
+  skill_id            BigInt
+  project_job_posts   project_job_posts   @relation(fields: [job_post_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_job_post")
+  professional_skills professional_skills @relation(fields: [skill_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_skill")
+
+  @@id([job_post_id, skill_id])
+}
+
+model job_specializations {
+  id                BigInt    @id @default(autoincrement())
+  job_categories_id String?   @db.VarChar(24)
+  name              String?   @db.VarChar(50)
+  is_active         Boolean?  @default(true)
+  created_at        DateTime? @db.Timestamp(6)
+  updated_at        DateTime? @db.Timestamp(6)
+}
+
+model logistic_warehouse_shipping_costs {
+  id                      BigInt                              @id @default(autoincrement())
+  warehouse_id            BigInt
+  price_per_uom           BigInt
+  created_at              DateTime                            @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime?                           @db.Timestamptz(6)
+  district_id             BigInt
+  destination_postal_code String                              @db.VarChar(50)
+  calculation_type        shipping_cost_calculation_type_enum @default(postal)
+  lead_time               String                              @default("") @db.VarChar(50)
+  reseller_districts      reseller_districts                  @relation(fields: [district_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "district_id_fkey")
+  logistic_warehouses     logistic_warehouses                 @relation(fields: [warehouse_id], references: [id], onDelete: Cascade)
+
+  @@unique([warehouse_id, district_id, destination_postal_code], map: "logistic_warehouse_shipping_costs_wrhs_dstrct_pstl_key")
+}
+
+model logistic_warehouses {
+  id                                BigInt                              @id @default(autoincrement())
+  logistic_id                       BigInt
+  name                              String                              @db.VarChar(100)
+  logistic_key                      String                              @db.VarChar(200)
+  created_at                        DateTime                            @default(now()) @db.Timestamptz(6)
+  updated_at                        DateTime?                           @db.Timestamptz(6)
+  deleted_at                        DateTime?                           @db.Timestamptz(6)
+  postal_code                       String                              @default("") @db.VarChar(100)
+  logistic_warehouse_shipping_costs logistic_warehouse_shipping_costs[]
+  logistics                         logistics                           @relation(fields: [logistic_id], references: [id], onDelete: Cascade)
+  product_warehouses                product_warehouses[]                @ignore
+  warehouse_coverage_cities         warehouse_coverage_cities[]         @ignore
+}
+
+model logistics {
+  id                   BigInt                @id @default(autoincrement())
+  name                 String                @unique @db.VarChar(100)
+  created_at           DateTime              @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime?             @db.Timestamptz(6)
+  deleted_at           DateTime?             @db.Timestamptz(6)
+  is_self_managed_cost Boolean               @default(true)
+  lead_time            String                @default("") @db.VarChar(50)
+  logistic_warehouses  logistic_warehouses[]
+  project_products     project_products[]
+}
+
+model master_banks {
+  id                   BigInt                @id @default(autoincrement())
+  payment_channel_id   BigInt
+  code                 String?               @db.VarChar(200)
+  code_payment_channel String?               @unique @db.VarChar(200)
+  name                 String?               @db.VarChar(255)
+  type                 master_bank_type_enum @default(bank)
+  payment_channels     payment_channels      @relation(fields: [payment_channel_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_payment_channel")
+}
+
+model master_divisions {
+  id   BigInt @id @default(autoincrement())
+  name String @db.VarChar(255)
+}
+
+model master_error_categories {
+  id                  BigInt                @id @default(autoincrement())
+  error_value         String?               @unique @db.VarChar(100)
+  label               String                @db.VarChar(255)
+  master_error_states master_error_states[]
+}
+
+model master_error_states {
+  id                      BigInt                  @id @default(autoincrement())
+  category_id             BigInt
+  error_value             String?                 @unique @db.VarChar(100)
+  label                   String                  @db.VarChar(255)
+  master_error_categories master_error_categories @relation(fields: [category_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_error_categories")
+}
+
+model master_job_criterias_group {
+  id                        BigInt                      @id @default(autoincrement())
+  criteria_group            String?                     @db.VarChar(100)
+  header                    String?                     @db.VarChar(255)
+  master_job_criterias_type master_job_criterias_type[]
+}
+
+model master_job_criterias_type {
+  id                         BigInt                       @id @default(autoincrement())
+  criteria_group_id          BigInt
+  label                      String?                      @db.VarChar(100)
+  name                       String?                      @db.VarChar(50)
+  type                       job_criteria_type_enum?
+  suffix                     String?                      @db.VarChar(20)
+  is_required                Boolean                      @default(false)
+  master_job_criterias_group master_job_criterias_group   @relation(fields: [criteria_group_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_criteria_group_id")
+  project_job_post_criterias project_job_post_criterias[]
+}
+
+model master_job_requirements {
+  id       BigInt                         @id @default(autoincrement())
+  category job_requirement_category_enum?
+  name     String                         @db.VarChar(100)
+}
+
+model master_positions {
+  id   BigInt @id @default(autoincrement())
+  name String @db.VarChar(255)
+}
+
+model master_soft_skills {
+  id         BigInt    @id @default(autoincrement())
+  name       String?   @db.VarChar(100)
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at DateTime? @db.Timestamptz(6)
+}
+
+model message_messages {
+  id          String    @id @db.VarChar(100)
+  content     String    @default("")
+  args        String[]
+  from_id     String    @default("") @db.VarChar(50)
+  from_name   String    @default("") @db.VarChar(50)
+  to_id       String    @default("") @db.VarChar(50)
+  to_name     String    @default("") @db.VarChar(50)
+  status      String    @default("") @db.VarChar(10)
+  error_code  String    @default("") @db.VarChar(10)
+  error_title String    @default("") @db.VarChar(50)
+  created_at  DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime? @db.Timestamptz(6)
+
+  @@index([status], map: "message_status_idx")
+  @@index([to_id], map: "message_to_id_idx")
+}
+
+model message_sms {
+  id          BigInt    @id @default(autoincrement())
+  external_id String?   @db.VarChar
+  provider    String?   @db.VarChar(50)
+  sender      String?   @db.VarChar(100)
+  recipient   String?   @db.VarChar(100)
+  content     String?   @db.VarChar(2048)
+  status      String?   @db.VarChar(50)
+  detail      String?
+  created_at  DateTime  @db.Timestamptz(6)
+  updated_at  DateTime? @db.Timestamptz(6)
+
+  @@index([provider])
+  @@index([status])
+}
+
+model neighbor_cities {
+  id                                          BigInt  @id @default(autoincrement())
+  city_id                                     BigInt?
+  base_city_id                                BigInt?
+  distance_in_km                              Float?
+  ranking                                     BigInt?
+  cities_neighbor_cities_base_city_idTocities cities? @relation("neighbor_cities_base_city_idTocities", fields: [base_city_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_nc_base_city_id")
+  cities_neighbor_cities_city_idTocities      cities? @relation("neighbor_cities_city_idTocities", fields: [city_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_nc_city_id")
+}
+
+model notification_push_notification_audiences {
+  id                              BigInt                             @id @default(autoincrement())
+  push_notification_id            BigInt
+  agent_id                        BigInt?
+  agent_push_token                String                             @db.VarChar(350)
+  status                          push_notification_audience_status?
+  failed_reason                   String?
+  created_at                      DateTime                           @default(now()) @db.Timestamptz(6)
+  agents                          agents?                            @relation(fields: [agent_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_agent_id")
+  notification_push_notifications notification_push_notifications    @relation(fields: [push_notification_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_push_notification_id")
+}
+
+model notification_push_notification_logs {
+  id                              BigInt                          @id @default(autoincrement())
+  push_notification_id            BigInt
+  total_audience                  BigInt                          @default(0)
+  total_success                   BigInt                          @default(0)
+  total_failed                    BigInt                          @default(0)
+  created_at                      DateTime                        @default(now()) @db.Timestamptz(6)
+  notification_push_notifications notification_push_notifications @relation(fields: [push_notification_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_push_notification_id_logs")
+}
+
+model notification_push_notifications {
+  id                                       BigInt                                     @id @default(autoincrement())
+  title                                    String                                     @db.VarChar(200)
+  message                                  String
+  click_action                             String?                                    @db.VarChar(200)
+  ref_id                                   String?                                    @db.VarChar(300)
+  source                                   push_notification_source
+  channel                                  push_notification_channel                  @default(firebase)
+  send_at                                  DateTime                                   @default(now()) @db.Timestamptz(6)
+  notification_push_notification_audiences notification_push_notification_audiences[]
+  notification_push_notification_logs      notification_push_notification_logs[]
+}
+
+model notifications {
+  id         BigInt    @id @default(autoincrement())
+  subject_id String    @db.VarChar(80)
+  object_id  String    @db.VarChar(50)
+  object     String    @db.VarChar(80)
+  actor      String    @db.VarChar(300)
+  payload    String    @db.VarChar(300)
+  is_read    Boolean   @default(false)
+  is_sent    Boolean   @default(false)
+  created_at DateTime  @db.Timestamptz(6)
+  updated_at DateTime? @db.Timestamptz(6)
+}
+
+model onboarding_screens {
+  id         BigInt                          @id @default(autoincrement())
+  ranking    Int?
+  title      String?                         @db.VarChar(100)
+  handler    onboarding_screen_handler_enum?
+  image_url  String?                         @db.VarChar(350)
+  is_active  Boolean                         @default(false)
+  created_at DateTime                        @db.Timestamptz(6)
+  updated_at DateTime?                       @db.Timestamptz(6)
+  deleted_at DateTime?                       @db.Timestamptz(6)
+}
+
+model operational_area {
+  id        BigInt  @id @default(autoincrement())
+  client_id BigInt
+  country   String  @db.VarChar(50)
+  city      String  @db.VarChar(50)
+  clients   clients @relation(fields: [client_id], references: [id], onDelete: Cascade)
+}
+
+model order_articles {
+  id                         BigInt                       @id @default(autoincrement())
+  order_id                   BigInt
+  article_id                 BigInt
+  amount                     BigInt?
+  quantity                   BigInt
+  articles                   articles                     @relation(fields: [article_id], references: [id], onDelete: Cascade)
+  orders                     orders                       @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  product_pre_order_articles product_pre_order_articles[]
+}
+
+model order_payments {
+  id           BigInt                     @id @default(autoincrement())
+  order_id     BigInt
+  midtrans_id  String?                    @db.VarChar(160)
+  status       order_payment_status_enum?
+  code         String?                    @db.VarChar(200)
+  amount       BigInt?
+  discount     BigInt?
+  created_at   DateTime                   @db.Timestamptz(6)
+  updated_at   DateTime?                  @db.Timestamptz(6)
+  deleted_at   DateTime?                  @db.Timestamptz(6)
+  payment_url  String?                    @default("") @db.VarChar(250)
+  is_processed Boolean                    @default(true)
+  payment_type String                     @default("") @db.VarChar(100)
+  orders       orders                     @relation(fields: [order_id], references: [id], onDelete: Cascade)
+}
+
+model orders {
+  id                         BigInt                     @id @default(autoincrement())
+  agent_id                   BigInt
+  status                     order_status_enum?         @default(Purchase_Order)
+  amount                     BigInt?
+  shipment_date              DateTime?                  @db.Date
+  shipment_cost              BigInt?
+  shipment_address           String?
+  district                   String?                    @db.VarChar(100)
+  city                       String?                    @db.VarChar(100)
+  state                      String?                    @db.VarChar(100)
+  country                    String?                    @db.VarChar(50)
+  postal_code                String?                    @db.VarChar(6)
+  created_at                 DateTime                   @default(now()) @db.Timestamptz(6)
+  updated_at                 DateTime?                  @db.Timestamptz(6)
+  deleted_at                 DateTime?                  @db.Timestamptz(6)
+  invoice_number             String                     @unique @db.VarChar(200)
+  product_group_id           BigInt
+  delivery_time              DateTime?                  @db.Timestamptz(6)
+  receiver_name              String?                    @db.VarChar(150)
+  shipment_id                BigInt?
+  shipping_code              String?                    @default("-") @db.VarChar(125)
+  is_dropship                Boolean                    @default(false)
+  sender_name                String                     @default("PT. Sampingan Mitra Indonesia") @db.VarChar(200)
+  parent_order_id            BigInt?
+  receiver_email             String                     @default("") @db.VarChar(150)
+  receiver_phone_number      String                     @default("") @db.VarChar(150)
+  shipping_cost_discount     BigInt                     @default(0)
+  shipping_cost_source       String                     @default("") @db.VarChar(150)
+  lead_time                  String                     @default("") @db.VarChar(100)
+  sender_phone_number        String                     @default("") @db.VarChar(100)
+  cancelled_at               DateTime?                  @db.Timestamptz(6)
+  courier_name               String?                    @db.VarChar(200)
+  courier_phone_number       String?                    @db.VarChar(100)
+  invoice_id                 BigInt?
+  minimum_order_handling_fee BigInt                     @default(0)
+  order_articles             order_articles[]
+  order_payments             order_payments[]
+  agents                     agents                     @relation(fields: [agent_id], references: [id], onDelete: Cascade)
+  reseller_invoices          reseller_invoices?         @relation(fields: [invoice_id], references: [id], onDelete: Cascade)
+  orders                     orders?                    @relation("ordersToorders", fields: [parent_order_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "parent_order_key")
+  other_orders               orders[]                   @relation("ordersToorders")
+  project_products           project_products           @relation(fields: [product_group_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "product_group_id_fkey")
+  reseller_shipment_options  reseller_shipment_options? @relation(fields: [shipment_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "reseller_shipment_options_id_fkey")
+
+  @@index([invoice_number(ops: raw("gin_trgm_ops"))], map: "order_invoice_number_trigram_idx", type: Gin)
+}
+
+model otps {
+  id           BigInt    @id @default(autoincrement())
+  agent_id     BigInt
+  country_code String    @db.VarChar(15)
+  phone_number String    @db.VarChar(15)
+  otp          String    @db.VarChar(4)
+  external_id  String?   @db.VarChar(100)
+  status       String?   @db.VarChar(16)
+  valid_till   DateTime  @db.Timestamptz(6)
+  created_at   DateTime  @db.Timestamptz(6)
+  updated_at   DateTime? @db.Timestamptz(6)
+  agents       agents    @relation(fields: [agent_id], references: [id], onDelete: Cascade)
+}
+
+model payment_channels {
+  id                          BigInt                        @id @default(autoincrement())
+  code                        String?                       @db.VarChar(200)
+  name                        String?                       @db.VarChar(255)
+  balance                     BigInt                        @default(0)
+  created_at                  DateTime                      @default(now()) @db.Timestamptz(6)
+  updated_at                  DateTime?                     @db.Timestamptz(6)
+  master_banks                master_banks[]
+  payment_disbursement_groups payment_disbursement_groups[]
+}
+
+model payment_configs {
+  id                          BigInt                        @id @default(autoincrement())
+  source                      String?                       @db.VarChar(200)
+  callback_url                String?                       @db.VarChar(255)
+  is_need_callback            Boolean?                      @default(false)
+  created_at                  DateTime                      @default(now()) @db.Timestamptz(6)
+  updated_at                  DateTime?                     @db.Timestamptz(6)
+  payment_disbursement_groups payment_disbursement_groups[]
+}
+
+model payment_disbursement_groups {
+  id                                BigInt                                     @id @default(autoincrement())
+  payment_channel_id                BigInt?
+  payment_config_id                 BigInt
+  reference                         String?                                    @unique(map: "unq_reference_payment_disbursement_groups") @db.VarChar(350)
+  total_uploaded_count              BigInt                                     @default(0)
+  total_uploaded_amount             BigInt                                     @default(0)
+  total_disbursed_count             BigInt                                     @default(0)
+  total_disbursed_amount            BigInt                                     @default(0)
+  total_error_count                 BigInt                                     @default(0)
+  total_error_amount                BigInt                                     @default(0)
+  source                            String?                                    @db.VarChar(200)
+  status                            payment_disbursement_status_enum?
+  approval_status                   payment_disbursement_approval_status_enum?
+  approved_at                       DateTime?                                  @db.Timestamptz(6)
+  approver_id                       BigInt?
+  updated_by                        BigInt?
+  callback_retry_count              BigInt                                     @default(0)
+  callback_status                   payment_callback_status_enum?
+  callback_failed_reason            String?
+  created_at                        DateTime                                   @default(now()) @db.Timestamptz(6)
+  updated_at                        DateTime?                                  @db.Timestamptz(6)
+  callback_at                       DateTime?                                  @db.Timestamptz(6)
+  payment_channels                  payment_channels?                          @relation(fields: [payment_channel_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_payment_channel")
+  payment_configs                   payment_configs                            @relation(fields: [payment_config_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_payment_config")
+  payment_disbursement_transactions payment_disbursement_transactions[]
+}
+
+model payment_disbursement_histories {
+  id                                BigInt                            @id @default(autoincrement())
+  disbursement_transaction_id       BigInt
+  action                            String?                           @db.VarChar(200)
+  action_source                     String?                           @db.VarChar(200)
+  updated_by                        BigInt?
+  created_at                        DateTime                          @default(now()) @db.Timestamptz(6)
+  payment_disbursement_transactions payment_disbursement_transactions @relation(fields: [disbursement_transaction_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_disbursement_transaction")
+}
+
+model payment_disbursement_transactions {
+  id                             BigInt                                        @id @default(autoincrement())
+  disbursement_group_id          BigInt
+  bank_code                      String?                                       @db.VarChar(200)
+  external_id                    String?                                       @unique(map: "unq_external_id") @db.VarChar(350)
+  bank_account_name              String?                                       @db.VarChar(255)
+  bank_account_number            String?                                       @db.VarChar(255)
+  bank_reference                 String?                                       @db.VarChar(255)
+  description                    String?
+  amount                         BigInt                                        @default(0)
+  status                         payment_disbursement_transaction_status_enum?
+  failure_code                   String?                                       @db.VarChar(200)
+  failure_message                String?                                       @db.VarChar(350)
+  updated_by                     BigInt?
+  created_at                     DateTime                                      @default(now()) @db.Timestamptz(6)
+  updated_at                     DateTime?                                     @db.Timestamptz(6)
+  email_to                       String[]                                      @db.VarChar
+  email_cc                       String[]                                      @db.VarChar
+  email_bcc                      String[]                                      @db.VarChar
+  idempotency_key                String?                                       @default("") @db.VarChar(255)
+  payment_disbursement_histories payment_disbursement_histories[]
+  payment_disbursement_groups    payment_disbursement_groups                   @relation(fields: [disbursement_group_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_disbursement_group")
+  payment_third_party_histories  payment_third_party_histories[]
+}
+
+model payment_third_party_histories {
+  id                                BigInt                            @id @default(autoincrement())
+  disbursement_transaction_id       BigInt
+  external_id                       String?                           @db.VarChar(350)
+  provider                          String?                           @db.VarChar(200)
+  status                            String?                           @db.VarChar(200)
+  amount                            BigInt                            @default(0)
+  updated_by                        BigInt?
+  created_at                        DateTime                          @default(now()) @db.Timestamptz(6)
+  payment_disbursement_transactions payment_disbursement_transactions @relation(fields: [disbursement_transaction_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_disbursement_transaction")
+}
+
+model payments {
+  id           BigInt                   @id @default(autoincrement())
+  object_type  payment_object_type_enum
+  object_id    BigInt
+  status       payment_status_enum
+  amount       BigInt
+  created_at   DateTime                 @db.Timestamptz(6)
+  updated_at   DateTime?                @db.Timestamptz(6)
+  deleted_at   DateTime?                @db.Timestamptz(6)
+  reference_id String?                  @db.VarChar(24)
+}
+
+model pickup_points {
+  id                 BigInt           @id @default(autoincrement())
+  agent_id           BigInt
+  project_product_id BigInt
+  address            String?
+  district           String?          @db.VarChar(100)
+  city               String?          @db.VarChar(100)
+  state              String?          @db.VarChar(100)
+  country            String?          @db.VarChar(50)
+  postal_code        String?          @db.VarChar(6)
+  agents             agents           @relation(fields: [agent_id], references: [id], onDelete: Cascade)
+  project_products   project_products @relation(fields: [project_product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model pre_registrations {
+  identifier String                     @db.VarChar
+  type       pre_registration_type_enum
+  created_at DateTime?                  @db.Timestamptz(6)
+  expired_at DateTime?                  @db.Timestamptz(6)
+
+  @@id([identifier, type])
+}
+
+model product_pre_order_articles {
+  id                 BigInt             @id @default(autoincrement())
+  pre_order_id       BigInt
+  order_article_id   BigInt
+  created_at         DateTime           @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime?          @db.Timestamptz(6)
+  deleted_at         DateTime?          @db.Timestamptz(6)
+  order_articles     order_articles     @relation(fields: [order_article_id], references: [id], onDelete: Cascade)
+  product_pre_orders product_pre_orders @relation(fields: [pre_order_id], references: [id], onDelete: Cascade)
+}
+
+model product_pre_orders {
+  id                         BigInt                       @id @default(autoincrement())
+  product_id                 BigInt
+  created_at                 DateTime                     @default(now()) @db.Timestamptz(6)
+  updated_at                 DateTime?                    @db.Timestamptz(6)
+  deleted_at                 DateTime?                    @db.Timestamptz(6)
+  product_pre_order_articles product_pre_order_articles[]
+  project_products           project_products             @relation(fields: [product_id], references: [id], onDelete: Cascade)
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model product_warehouses {
+  warehouse_id        BigInt
+  project_product_id  BigInt
+  created_at          DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime?           @db.Timestamptz(6)
+  deleted_at          DateTime?           @db.Timestamptz(6)
+  project_products    project_products    @relation(fields: [project_product_id], references: [id], onDelete: Cascade)
+  logistic_warehouses logistic_warehouses @relation(fields: [warehouse_id], references: [id], onDelete: Cascade)
+
+  @@ignore
+}
+
+model professional_skills {
+  id                           BigInt                         @id @default(autoincrement())
+  name                         String?                        @unique @db.VarChar(100)
+  created_at                   DateTime                       @default(now()) @db.Timestamptz(6)
+  updated_at                   DateTime?                      @db.Timestamptz(6)
+  deleted_at                   DateTime?                      @db.Timestamptz(6)
+  is_active                    Boolean?                       @default(true)
+  agent_professional_skills    agent_professional_skills[]
+  job_post_professional_skills job_post_professional_skills[]
+}
+
+model professions {
+  id         BigInt    @id @default(autoincrement())
+  name       String    @unique @db.VarChar(150)
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at DateTime? @db.Timestamptz(6)
+  deleted_at DateTime? @db.Timestamptz(6)
+  agents     agents[]
+}
+
+model project_agents {
+  id              BigInt                              @id @default(autoincrement())
+  project_id      BigInt
+  agent_id        BigInt
+  agent_status    project_agent_status_enum?
+  training_status project_agent_training_status_enum?
+  created_at      DateTime                            @db.Timestamptz(6)
+  updated_at      DateTime?                           @db.Timestamptz(6)
+  disband_reason  String?
+  disband_date    DateTime?                           @db.Timestamptz(6)
+  batch_number    BigInt                              @default(0)
+  criteria        Json?
+  deleted_at      DateTime?                           @db.Timestamptz(6)
+  deleted_by      String                              @default("") @db.VarChar
+  agents          agents                              @relation(fields: [agent_id], references: [id], onDelete: Cascade)
+  projects        projects                            @relation(fields: [project_id], references: [id], onDelete: Cascade)
+}
+
+model project_category_pricing_configs {
+  id               BigInt                @id @default(autoincrement())
+  project_category project_category_enum
+  unit             String?               @db.VarChar(100)
+  price_per_unit   BigInt                @default(0)
+  created_at       DateTime              @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime?             @db.Timestamptz(6)
+  deleted_at       DateTime?             @db.Timestamptz(6)
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model project_city_criterias {
+  project_id BigInt
+  city_id    BigInt
+  cities     cities   @relation(fields: [city_id], references: [id], onDelete: Cascade)
+  projects   projects @relation(fields: [project_id], references: [id], onDelete: Cascade)
+
+  @@index([project_id], map: "project_city_criterias_project_idx")
+  @@ignore
+}
+
+model project_files {
+  id                   BigInt    @id @default(autoincrement())
+  project_id           BigInt
+  name                 String    @db.VarChar(250)
+  type                 String    @db.VarChar(40)
+  url                  String    @db.VarChar(350)
+  readable_id          Int
+  created_at           DateTime  @db.Timestamptz(6)
+  updated_at           DateTime? @db.Timestamptz(6)
+  deleted_at           DateTime? @db.Timestamptz(6)
+  reference_project_id String?   @db.VarChar(24)
+  projects             projects  @relation(fields: [project_id], references: [id], onDelete: Cascade)
+}
+
+model project_job_offer_histories {
+  id                BigInt            @id @default(autoincrement())
+  agent_id          BigInt
+  job_post_id       BigInt
+  created_at        DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime?         @db.Timestamptz(6)
+  agents            agents            @relation(fields: [agent_id], references: [id], onDelete: Cascade)
+  project_job_posts project_job_posts @relation(fields: [job_post_id], references: [id], onDelete: Cascade)
+
+  @@index([created_at, agent_id], map: "job_offer_histories")
+  @@index([id], map: "job_offer_histories_id")
+}
+
+model project_job_post_application_answer_form {
+  id                            BigInt    @id @default(autoincrement())
+  application_id                BigInt
+  question_id                   BigInt
+  answers                       Json      @default("{}")
+  answer_results                Json      @default("{}")
+  total_preferred_answers_match BigInt
+  rejected_reason               String?
+  failed_reason                 String?
+  status                        String?
+  created_at                    DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at                    DateTime? @db.Timestamptz(6)
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model project_job_post_application_auto_rejections {
+  application_id BigInt
+  is_done        Boolean @default(false)
+
+  @@ignore
+}
+
+model project_job_post_application_form_token {
+  id             BigInt         @id @default(autoincrement())
+  application_id BigInt
+  question_type  form_type_enum @default(EMPTY_ENUM_VALUE)
+  token          String         @db.Uuid
+  created_at     DateTime       @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime?      @db.Timestamptz(6)
+}
+
+model project_job_post_application_interviews {
+  id                            BigInt                                        @id @default(autoincrement())
+  application_id                BigInt
+  interview_id                  BigInt
+  interview_schedule_id         BigInt?
+  notes                         String?
+  status                        project_job_post_application_interview_status @default(invited)
+  result                        project_job_post_application_interview_result @default(EMPTY_ENUM_VALUE)
+  created_at                    DateTime                                      @default(now()) @db.Timestamptz(6)
+  updated_at                    DateTime?                                     @db.Timestamptz(6)
+  has_sent_interview_reminder   Boolean?                                      @default(false)
+  project_job_post_applications project_job_post_applications                 @relation(fields: [application_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_application_id")
+  project_job_post_interviews   project_job_post_interviews                   @relation(fields: [interview_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_interview_id")
+}
+
+model project_job_post_application_onboard_administrations {
+  id                                      BigInt                                                  @id @default(autoincrement())
+  application_id                          BigInt
+  question_id                             BigInt
+  mandatory_answers                       Json?
+  mandatory_answer_results                Json?
+  mandatory_total_preferred_answer_match  Int?                                                    @default(0) @db.SmallInt
+  additional_answers                      Json?
+  additional_answer_results               Json?
+  additional_total_preferred_answer_match Int?                                                    @default(0) @db.SmallInt
+  created_at                              DateTime                                                @default(now()) @db.Timestamptz(6)
+  updated_at                              DateTime?                                               @db.Timestamptz(6)
+  deleted_at                              DateTime?                                               @db.Timestamptz(6)
+  rejected_reason                         String?
+  failed_reason                           String?
+  status                                  project_application_onboard_administration_status_enum? @default(pending)
+  project_job_post_applications           project_job_post_applications                           @relation(fields: [application_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_application_id")
+  project_job_post_onboards               project_job_post_onboards                               @relation(fields: [question_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_question_id")
+}
+
+model project_job_post_application_onboard_tokens {
+  id                            BigInt                        @id @default(autoincrement())
+  application_id                BigInt
+  token                         String                        @db.Uuid
+  is_resubmit                   Boolean?                      @default(false)
+  created_at                    DateTime                      @default(now()) @db.Timestamptz(6)
+  updated_at                    DateTime?                     @db.Timestamptz(6)
+  project_job_post_applications project_job_post_applications @relation(fields: [application_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_application_id")
+}
+
+model project_job_post_application_onboards {
+  id                            BigInt                                   @id @default(autoincrement())
+  application_id                BigInt
+  kerjaan_client_id             BigInt
+  kerjaan_client_name           String                                   @db.VarChar(200)
+  kerjaan_branch_id             BigInt?
+  kerjaan_payroll_id            BigInt?
+  kerjaan_project_id            BigInt?
+  position                      String                                   @db.VarChar(250)
+  failed_reason                 String?
+  onboard_at                    DateTime?                                @db.Timestamptz(6)
+  created_at                    DateTime?                                @db.Timestamptz(6)
+  updated_at                    DateTime?                                @db.Timestamptz(6)
+  total_retry                   Int                                      @default(0)
+  kerjaan_agent_id              BigInt?
+  status                        project_application_onboard_status_enum? @default(waiting)
+  contract_date_start           DateTime?                                @db.Date
+  contract_date_end             DateTime?                                @db.Date
+  project_job_post_applications project_job_post_applications            @relation(fields: [application_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_application_id")
+}
+
+model project_job_post_application_rejection_categories {
+  id                 BigInt                      @id @default(autoincrement())
+  status             job_application_status_enum
+  rejection_category String                      @db.VarChar(100)
+  created_at         DateTime                    @default(now()) @db.Timestamptz(6)
+}
+
+model project_job_post_applications {
+  id                                                   BigInt                                                  @id @default(autoincrement())
+  job_post_id                                          BigInt
+  question_id                                          BigInt?
+  agent_id                                             BigInt
+  answers                                              Json?
+  created_at                                           DateTime                                                @default(now()) @db.Timestamptz(6)
+  updated_at                                           DateTime?                                               @db.Timestamptz(6)
+  deleted_at                                           DateTime?                                               @db.Timestamptz(6)
+  is_viewed                                            Boolean                                                 @default(false)
+  status                                               job_application_status_enum?
+  automatic_status_updated_at                          DateTime?                                               @db.Timestamptz(6)
+  answer_results                                       Json?                                                   @default("{}")
+  total_preferred_answer_match                         Int?                                                    @default(0) @db.SmallInt
+  source                                               project_job_post_application_source_enum                @default(empty)
+  onboard_failed_reason                                String?
+  onboard_administration_rejected_reason               String?
+  onboard_material_failed_reason                       String?
+  onboard_administration_failed_reason                 String?
+  onboard_status                                       project_application_onboard_status_enum?                @default(pending)
+  onboard_administration_status                        project_application_onboard_administration_status_enum? @default(pending)
+  onboard_material_status                              project_application_onboard_material_status_enum?       @default(pending)
+  rejection_source                                     job_application_rejection_source_enum?                  @default(EMPTY_ENUM_VALUE)
+  rejection_category                                   String?                                                 @db.VarChar(100)
+  rejection_detail                                     String?
+  rejection_stage                                      job_application_rejection_stage_enum?                   @default(EMPTY_ENUM_VALUE)
+  marketing_title                                      String?                                                 @db.VarChar(255)
+  marketing_short_url                                  String?                                                 @db.VarChar(255)
+  marketing_feature                                    String?                                                 @db.VarChar(255)
+  marketing_channel                                    String?                                                 @db.VarChar(255)
+  marketing_campaign                                   String?                                                 @db.VarChar(255)
+  marketing_tags                                       String?                                                 @db.VarChar(255)
+  offering_form_status                                 String?
+  approval_form_status                                 String?
+  has_sent_approval_reminder                           Boolean?                                                @default(false)
+  has_sent_offering_reminder                           Boolean?                                                @default(false)
+  project_job_post_application_interviews              project_job_post_application_interviews[]
+  project_job_post_application_onboard_administrations project_job_post_application_onboard_administrations[]
+  project_job_post_application_onboard_tokens          project_job_post_application_onboard_tokens[]
+  project_job_post_application_onboards                project_job_post_application_onboards[]
+  agents                                               agents                                                  @relation(fields: [agent_id], references: [id], onDelete: Cascade)
+  project_job_posts                                    project_job_posts                                       @relation(fields: [job_post_id], references: [id], onDelete: Cascade)
+  project_job_post_questions                           project_job_post_questions?                             @relation(fields: [question_id], references: [id], onDelete: Cascade)
+
+  @@index([answer_results], map: "job_application_answer_result_key")
+  @@index([job_post_id], map: "job_application_job_post_idx")
+  @@index([agent_id], map: "project_job_post_applications_agent_idx")
+  @@index([created_at], map: "project_job_post_applications_created_at")
+}
+
+model project_job_post_criterias {
+  job_post_id               BigInt
+  criteria_id               BigInt
+  criteria_value            String[]                  @db.VarChar(200)
+  is_auto_reject            Boolean                   @default(false)
+  reference_ids             String[]                  @db.VarChar(50)
+  master_job_criterias_type master_job_criterias_type @relation(fields: [criteria_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_criteria_id")
+  project_job_posts         project_job_posts         @relation(fields: [job_post_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_job_post_id")
+
+  @@id([job_post_id, criteria_id])
+}
+
+model project_job_post_interview_persons_in_charges {
+  id                          BigInt                      @id(map: "project_job_post_interview_pics_pkey") @default(autoincrement())
+  interview_id                BigInt
+  name                        String?                     @db.VarChar(200)
+  phone                       String?                     @db.VarChar(200)
+  email                       String?                     @db.VarChar(200)
+  created_at                  DateTime                    @default(now()) @db.Timestamptz(6)
+  updated_at                  DateTime?                   @db.Timestamptz(6)
+  project_job_post_interviews project_job_post_interviews @relation(fields: [interview_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_interview_id")
+}
+
+model project_job_post_interview_schedules {
+  id                          BigInt                                     @id @default(autoincrement())
+  interview_id                BigInt
+  date                        String?                                    @db.VarChar(200)
+  hangout_url                 String?                                    @db.VarChar(200)
+  calendar_id                 String?                                    @db.VarChar(200)
+  event_id                    String?                                    @db.VarChar(200)
+  start_time                  DateTime                                   @db.Timestamptz(6)
+  end_time                    DateTime                                   @db.Timestamptz(6)
+  status                      project_job_post_interview_schedule_status @default(open)
+  created_at                  DateTime                                   @default(now()) @db.Timestamptz(6)
+  updated_at                  DateTime?                                  @db.Timestamptz(6)
+  project_job_post_interviews project_job_post_interviews                @relation(fields: [interview_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_interview_id")
+}
+
+model project_job_post_interviews {
+  id                                            BigInt                                          @id @default(autoincrement())
+  client_id                                     BigInt
+  job_post_id                                   BigInt
+  title                                         String?                                         @db.VarChar(200)
+  type                                          project_job_post_interview_type
+  address                                       String?
+  hangout_url                                   String?                                         @db.VarChar(200)
+  calendar_id                                   String?                                         @db.VarChar(200)
+  event_id                                      String?                                         @db.VarChar(200)
+  status                                        project_job_post_interview_status               @default(draft)
+  created_at                                    DateTime                                        @default(now()) @db.Timestamptz(6)
+  updated_at                                    DateTime?                                       @db.Timestamptz(6)
+  project_job_post_application_interviews       project_job_post_application_interviews[]
+  project_job_post_interview_persons_in_charges project_job_post_interview_persons_in_charges[]
+  project_job_post_interview_schedules          project_job_post_interview_schedules[]
+  clients                                       clients                                         @relation(fields: [client_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_client_id")
+  project_job_posts                             project_job_posts                               @relation(fields: [job_post_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_job_post_id")
+}
+
+model project_job_post_links {
+  id                     BigInt    @id @default(autoincrement())
+  job_post_id            BigInt
+  link                   String
+  recruitment_channel_id BigInt
+  created_at             DateTime? @db.Timestamptz(6)
+  updated_at             DateTime? @db.Timestamptz(6)
+}
+
+model project_job_post_onboards {
+  id                                                   BigInt                                                 @id @default(autoincrement())
+  job_post_id                                          BigInt
+  question_version                                     BigInt
+  mandatory_questions                                  Json?
+  mandatory_ui_schema                                  Json?
+  mandatory_question_is_active                         Json?
+  mandatory_preferred_answer                           Json?
+  mandatory_total_preferred_answer                     Int?                                                   @default(0) @db.SmallInt
+  additional_questions                                 Json?
+  additional_ui_schema                                 Json?
+  additional_question_is_active                        Json?
+  additional_preferred_answer                          Json?
+  additional_total_preferred_answer                    Int?                                                   @default(0) @db.SmallInt
+  created_at                                           DateTime                                               @default(now()) @db.Timestamptz(6)
+  updated_at                                           DateTime?                                              @db.Timestamptz(6)
+  deleted_at                                           DateTime?                                              @db.Timestamptz(6)
+  project_job_post_application_onboard_administrations project_job_post_application_onboard_administrations[]
+  project_job_posts                                    project_job_posts                                      @relation(fields: [job_post_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_job_post_id")
+
+  @@index([job_post_id], map: "job_onboard_job_post_idx")
+}
+
+model project_job_post_qualification_forms {
+  id                 BigInt    @id @default(autoincrement())
+  name               String    @db.VarChar(200)
+  is_active          Boolean?  @default(true)
+  question_schema    Json      @default("{}")
+  question_ui_schema Json      @default("{}")
+  preferred_answers  Json      @default("{}")
+  question_is_active Json      @default("{}")
+  created_at         DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime? @db.Timestamptz(6)
+  deleted_at         DateTime? @db.Timestamptz(6)
+}
+
+model project_job_post_questions {
+  id                              BigInt                          @id @default(autoincrement())
+  job_post_id                     BigInt
+  questions                       Json?
+  question_version                BigInt
+  created_at                      DateTime                        @default(now()) @db.Timestamptz(6)
+  updated_at                      DateTime?                       @db.Timestamptz(6)
+  deleted_at                      DateTime?                       @db.Timestamptz(6)
+  ui_schema                       Json?
+  question_is_active              Json?
+  preferred_answers               Json?                           @default("{}")
+  total_preferred_answer_question Int?                            @default(0) @db.SmallInt
+  question_auto_reject            Json                            @default("{}")
+  project_job_post_applications   project_job_post_applications[]
+  project_job_posts               project_job_posts               @relation(fields: [job_post_id], references: [id], onDelete: Cascade)
+
+  @@index([job_post_id], map: "job_question_job_post_idx")
+}
+
+model project_job_post_questions_form {
+  id                               BigInt         @id @default(autoincrement())
+  job_post_id                      BigInt
+  questions                        Json           @default("{}")
+  question_auto_reject             Json           @default("{}")
+  question_version                 BigInt
+  ui_schema                        Json           @default("{}")
+  question_is_active               Json           @default("{}")
+  total_preferred_answers_question BigInt
+  form_type                        form_type_enum @default(EMPTY_ENUM_VALUE)
+  created_at                       DateTime       @default(now()) @db.Timestamptz(6)
+  updated_at                       DateTime?      @db.Timestamptz(6)
+  preferred_answers                Json           @default("{}")
+}
+
+model project_job_post_requirements {
+  id                  BigInt                         @id @default(autoincrement())
+  job_requirement_ids String[]                       @db.VarChar(50)
+  category            job_requirement_category_enum?
+  job_post_id         BigInt
+  is_auto_reject      Boolean                        @default(false)
+  project_job_posts   project_job_posts              @relation(fields: [job_post_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_job_post_id")
+
+  @@index([job_post_id], map: "project_job_post_requirements_idx")
+}
+
+model project_job_posts {
+  id                                BigInt                                   @id @default(autoincrement())
+  project_id                        BigInt
+  minimum_formal_education_level_id BigInt?
+  pic_name                          String                                   @db.VarChar(200)
+  pic_email_address                 String                                   @db.VarChar(200)
+  job_requirements                  String
+  incentive_period                  project_job_posts_incentive_period_enum?
+  employment_type                   project_job_posts_employment_type_enum?
+  minimum_incentive                 BigInt
+  maximum_incentive                 BigInt
+  created_at                        DateTime                                 @default(now()) @db.Timestamptz(6)
+  updated_at                        DateTime?                                @db.Timestamptz(6)
+  deleted_at                        DateTime?                                @db.Timestamptz(6)
+  is_hide_incentive                 Boolean?                                 @default(false)
+  post_active_until                 DateTime?                                @default(dbgenerated("CURRENT_DATE")) @db.Date
+  job_application_until             DateTime?                                @default(dbgenerated("CURRENT_DATE")) @db.Date
+  pic_phone_number                  String                                   @db.VarChar(200)
+  job_category_id                   String                                   @db.VarChar(24)
+  job_category_preference_id        BigInt?
+  employment_total                  BigInt?                                  @default(0)
+  employment_status                 employment_status_enum?                  @default(EMPTY_ENUM_VALUE)
+  share_link_url                    String?
+  employment_accepted               BigInt                                   @default(0)
+  employment_rejected               BigInt                                   @default(0)
+  employment_selection              BigInt                                   @default(0)
+  employment_on_process             BigInt                                   @default(0)
+  is_need_onboard_administration    Boolean?                                 @default(false)
+  is_need_onboard_to_kerjaan        Boolean?                                 @default(false)
+  onboard_material_url              String?                                  @db.VarChar(350)
+  working_schema                    working_schema_enum?                     @default(EMPTY_ENUM_VALUE)
+  has_incentive                     Boolean?
+  has_allowance                     Boolean?
+  job_specialization_id             BigInt?
+  working_periode_start             DateTime?                                @db.Date
+  subscription_end_date             DateTime?                                @db.Date
+  working_time                      String?                                  @db.VarChar(200)
+  working_day                       String?                                  @db.VarChar(200)
+  interview_material_url            String?                                  @db.VarChar(200)
+  working_periode_end               DateTime?                                @db.Date
+  is_need_offering_form             Boolean?                                 @default(false)
+  is_need_approval_form             Boolean?                                 @default(false)
+  job_post_type                     String?                                  @default("advanced") @db.VarChar(50)
+  job_post_professional_skills      job_post_professional_skills[]
+  project_job_offer_histories       project_job_offer_histories[]
+  project_job_post_applications     project_job_post_applications[]
+  project_job_post_criterias        project_job_post_criterias[]
+  project_job_post_interviews       project_job_post_interviews[]
+  project_job_post_onboards         project_job_post_onboards[]
+  project_job_post_questions        project_job_post_questions[]
+  project_job_post_requirements     project_job_post_requirements[]
+  pt_job_categories                 pt_job_categories                        @relation(fields: [job_category_id], references: [oid__id], onDelete: NoAction, onUpdate: NoAction)
+  job_categories                    job_categories?                          @relation(fields: [job_category_preference_id], references: [id], onDelete: Cascade)
+  formal_education_levels           formal_education_levels?                 @relation(fields: [minimum_formal_education_level_id], references: [id], onDelete: Cascade)
+  projects                          projects                                 @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  project_job_posts_quick_links     project_job_posts_quick_links[]          @ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model project_job_posts_quick_links {
+  job_post_id       BigInt
+  quick_link        String?           @unique @db.VarChar(250)
+  link_type         link_type_enum?
+  project_job_posts project_job_posts @relation(fields: [job_post_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_job_post_id")
+
+  @@ignore
+}
+
+model project_payments {
+  id           BigInt    @id @default(autoincrement())
+  project_id   BigInt
+  midtrans_id  String    @db.Uuid
+  order_id     String    @db.Uuid
+  status       String?   @db.VarChar(100)
+  payment_url  String    @db.VarChar(225)
+  payment_type String?   @default("") @db.VarChar(100)
+  amount       BigInt    @default(0)
+  created_at   DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime? @db.Timestamptz(6)
+  deleted_at   DateTime? @db.Timestamptz(6)
+  projects     projects  @relation(fields: [project_id], references: [id], onDelete: Cascade)
+}
+
+model project_product_photos {
+  id                 BigInt           @id @default(autoincrement())
+  project_product_id BigInt
+  photo_url          String           @db.VarChar(250)
+  created_at         DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime?        @db.Timestamptz(6)
+  deleted_at         DateTime?        @db.Timestamptz(6)
+  project_products   project_products @relation(fields: [project_product_id], references: [id], onDelete: Cascade)
+}
+
+model project_products {
+  id                              BigInt                   @id @default(autoincrement())
+  project_id                      BigInt
+  product_group                   String                   @db.VarChar(50)
+  created_at                      DateTime                 @default(now()) @db.Timestamptz(6)
+  updated_at                      DateTime?                @db.Timestamptz(6)
+  deleted_at                      DateTime?                @db.Timestamptz(6)
+  minimum_quantity_order          BigInt?
+  maximum_quantity_order          BigInt?
+  starting_price                  BigInt                   @default(0)
+  video_title                     String                   @default("") @db.VarChar(150)
+  video_url                       String                   @default("") @db.VarChar(250)
+  video_description               String                   @default("")
+  call_to_action                  String                   @default("") @db.VarChar(100)
+  shipping_cost                   BigInt                   @default(0)
+  location                        String                   @default("") @db.VarChar(300)
+  shareable_content               String?                  @default("")
+  is_perishable                   Boolean                  @default(false)
+  shipping_discount_percentage    Float                    @default(0)
+  max_shipping_discount           BigInt                   @default(0)
+  is_automated_shipment           Boolean                  @default(true)
+  is_minimum_purchase_by_quantity Boolean                  @default(false)
+  minimum_order_value             BigInt                   @default(0)
+  maximum_order_value             BigInt                   @default(0)
+  uom_price                       BigInt                   @default(0)
+  shipping_logistic_id            BigInt                   @default(2)
+  delivery_information            String                   @default("<p>Libur setiap Sabtu dan Minggu.</p><p>Pemesanan sebelum 15.00 diproses esok hari (H+1).</p><p>Pemesanan setelah 15.00 diproses lusa (H+2).</p>")
+  minimum_order_handling_fee      BigInt                   @default(0)
+  articles                        articles[]
+  orders                          orders[]
+  pickup_points                   pickup_points[]
+  product_pre_orders              product_pre_orders[]
+  product_warehouses              product_warehouses[]     @ignore
+  project_product_photos          project_product_photos[]
+  projects                        projects                 @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  logistics                       logistics                @relation(fields: [shipping_logistic_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "shipping_logistic_id_fkey")
+}
+
+model project_tasks {
+  id                     BigInt             @id @default(autoincrement())
+  project_id             BigInt
+  training_material_data Json?
+  is_need_approval       Boolean            @default(false)
+  submission_schema      Json?
+  submission_limit       BigInt?
+  submission_target      BigInt?
+  created_at             DateTime           @db.Timestamptz(6)
+  updated_at             DateTime?          @db.Timestamptz(6)
+  deleted_at             DateTime?          @db.Timestamptz(6)
+  reference_project_id   String?            @db.VarChar(24)
+  projects               projects           @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  task_submissions       task_submissions[]
+}
+
+model project_times {
+  id                    BigInt                        @id @default(autoincrement())
+  project_id            BigInt
+  start_date            DateTime?                     @db.Timestamptz(6)
+  end_date              DateTime?                     @db.Timestamptz(6)
+  is_check_out_required Boolean                       @default(false)
+  check_in_code         BigInt[]
+  check_in_time         DateTime?                     @db.Timestamptz(6)
+  check_out_code        BigInt[]
+  check_out_time        DateTime?                     @db.Timestamptz(6)
+  is_form_required      Boolean                       @default(false)
+  form_schema           Json?
+  incentive             BigInt?
+  incentive_schema      BigInt?
+  created_at            DateTime                      @db.Timestamptz(6)
+  updated_at            DateTime?                     @db.Timestamptz(6)
+  deleted_at            DateTime?                     @db.Timestamptz(6)
+  reference_project_id  String?                       @db.VarChar(24)
+  work_types            String?                       @db.VarChar(150)
+  is_need_selection     Boolean?
+  shift                 project_times_shift_enum[]
+  deployment_place      BigInt?
+  number_of_workers     BigInt?
+  is_favorited_only     Boolean?
+  time_dimension        project_times_dimension_enum?
+  projects              projects                      @relation(fields: [project_id], references: [id], onDelete: Cascade)
+}
+
+model projects {
+  id                            BigInt                        @id @default(autoincrement())
+  client_id                     BigInt
+  title                         String                        @db.VarChar(100)
+  type                          project_type_enum             @default(public)
+  status                        project_status_enum?
+  category                      project_category_enum?
+  incentive                     Int?
+  description                   String
+  short_description             String
+  currency                      String                        @default("IDR") @db.Char(3)
+  is_featured                   Boolean                       @default(false)
+  photo_url                     String                        @db.VarChar(300)
+  cover_photo_url               String                        @db.VarChar(300)
+  featured_photo_url            String                        @db.VarChar(300)
+  agent_criteria_data           Json?
+  tags                          Json?
+  start_date                    DateTime?                     @db.Timestamptz(6)
+  end_date                      DateTime?                     @db.Timestamptz(6)
+  tos_url                       String?                       @db.VarChar(300)
+  created_at                    DateTime                      @default(now()) @db.Timestamptz(6)
+  updated_at                    DateTime?                     @db.Timestamptz(6)
+  deleted_at                    DateTime?                     @db.Timestamptz(6)
+  reference_id                  String?                       @db.VarChar(24)
+  city_id                       BigInt?
+  reject_reason                 String?
+  is_for_domicile_resident_only Boolean?                      @default(true)
+  approval_status               project_approval_status_enum? @default(in_review)
+  articles                      articles[]
+  project_agents                project_agents[]
+  project_city_criterias        project_city_criterias[]      @ignore
+  project_files                 project_files[]
+  project_job_posts             project_job_posts[]
+  project_payments              project_payments[]
+  project_products              project_products[]
+  project_tasks                 project_tasks[]
+  project_times                 project_times[]
+  cities                        cities?                       @relation(fields: [city_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  clients                       clients                       @relation(fields: [client_id], references: [id], onDelete: Cascade)
+  task_submissions              task_submissions[]
+
+  @@index([title], map: "project_title_idx")
+}
+
+model provinces {
+  id         Int       @id @default(autoincrement())
+  name       String    @unique @db.VarChar(80)
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at DateTime? @db.Timestamptz(6)
+  deleted_at DateTime? @db.Timestamptz(6)
+  cities     cities[]
+}
+
+model pt_job_categories {
+  oid__id                          String                             @id @db.VarChar(24)
+  name                             String?
+  badgeUrl                         String?
+  isActive                         Boolean?
+  isPooledActive                   Boolean?
+  createdAt                        DateTime?                          @db.Timestamp(6)
+  updatedAt                        DateTime?                          @db.Timestamp(6)
+  agent_job_categories_preferences agent_job_categories_preferences[]
+  project_job_posts                project_job_posts[]
+
+  @@index([oid__id], map: "pt_job_cat_oid_idx")
+}
+
+model recruitment_channel_platforms {
+  id              BigInt    @id @default(autoincrement())
+  channel_type_id BigInt
+  name            String    @db.VarChar(150)
+  is_active       Boolean   @default(true)
+  created_at      DateTime? @db.Timestamptz(6)
+  updated_at      DateTime? @db.Timestamptz(6)
+}
+
+model recruitment_channel_types {
+  id         BigInt    @id @default(autoincrement())
+  name       String    @db.VarChar(150)
+  is_active  Boolean   @default(true)
+  created_at DateTime? @db.Timestamptz(6)
+  updated_at DateTime? @db.Timestamptz(6)
+}
+
+model recruitment_channels {
+  id                  BigInt    @id @default(autoincrement())
+  channel_type_id     BigInt?
+  channel_platform_id BigInt?
+  title               String    @db.VarChar(150)
+  account             String    @db.VarChar(150)
+  is_active           Boolean   @default(true)
+  created_at          DateTime? @db.Timestamptz(6)
+  updated_at          DateTime? @db.Timestamptz(6)
+}
+
+model reseller_cities {
+  id                        BigInt                      @id @default(autoincrement())
+  province_id               BigInt
+  name                      String                      @db.VarChar(100)
+  created_at                DateTime                    @default(now()) @db.Timestamptz(6)
+  updated_at                DateTime?                   @db.Timestamptz(6)
+  deleted_at                DateTime?                   @db.Timestamptz(6)
+  is_shown                  Boolean                     @default(false)
+  reseller_provinces        reseller_provinces          @relation(fields: [province_id], references: [id], onDelete: Cascade)
+  reseller_districts        reseller_districts[]
+  warehouse_coverage_cities warehouse_coverage_cities[] @ignore
+}
+
+model reseller_districts {
+  id                                BigInt                              @id @default(autoincrement())
+  city_id                           BigInt
+  name                              String                              @db.VarChar(100)
+  created_at                        DateTime                            @default(now()) @db.Timestamptz(6)
+  updated_at                        DateTime?                           @db.Timestamptz(6)
+  deleted_at                        DateTime?                           @db.Timestamptz(6)
+  is_shown                          Boolean                             @default(false)
+  logistic_warehouse_shipping_costs logistic_warehouse_shipping_costs[]
+  reseller_cities                   reseller_cities                     @relation(fields: [city_id], references: [id], onDelete: Cascade)
+  reseller_villages                 reseller_villages[]
+}
+
+model reseller_invoice_logs {
+  id                BigInt            @id(map: "invoice_logs_pkey") @default(autoincrement())
+  invoice_id        BigInt
+  action            String?           @db.VarChar(200)
+  action_by         String?           @db.VarChar(200)
+  action_date       DateTime?         @db.Timestamptz(6)
+  reseller_invoices reseller_invoices @relation(fields: [invoice_id], references: [id], onDelete: Cascade, map: "invoice_logs_invoice_id_fkey")
+}
+
+model reseller_invoices {
+  id                    BigInt                  @id(map: "invoices_pkey") @default(autoincrement())
+  client_id             BigInt
+  total_order           BigInt?                 @default(0)
+  total_amount          BigInt?                 @default(0)
+  status                invoice_status_enum?    @default(waiting_approval)
+  start_period          DateTime?               @db.Timestamptz(6)
+  end_period            DateTime?               @db.Timestamptz(6)
+  created_at            DateTime                @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime?               @db.Timestamptz(6)
+  deleted_at            DateTime?               @db.Timestamptz(6)
+  code                  String                  @unique(map: "invoices_new_code_key") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  orders                orders[]
+  reseller_invoice_logs reseller_invoice_logs[]
+  clients               clients                 @relation(fields: [client_id], references: [id], onDelete: Cascade, map: "invoices_client_id_fkey")
+}
+
+model reseller_provinces {
+  id              BigInt            @id @default(autoincrement())
+  name            String            @unique @db.VarChar(100)
+  created_at      DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime?         @db.Timestamptz(6)
+  deleted_at      DateTime?         @db.Timestamptz(6)
+  reseller_cities reseller_cities[]
+}
+
+model reseller_shipment_options {
+  id                              BigInt    @id @default(autoincrement())
+  name                            String    @unique @db.VarChar(100)
+  tariff                          BigInt
+  estimated_delivery_minimum_days BigInt
+  estimated_delivery_maximum_days BigInt
+  created_at                      DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at                      DateTime? @db.Timestamptz(6)
+  deleted_at                      DateTime? @db.Timestamptz(6)
+  orders                          orders[]
+}
+
+model reseller_villages {
+  id                 BigInt             @id @default(autoincrement())
+  district_id        BigInt
+  name               String             @db.VarChar(100)
+  postal_code        String             @db.VarChar(20)
+  created_at         DateTime           @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime?          @db.Timestamptz(6)
+  deleted_at         DateTime?          @db.Timestamptz(6)
+  is_shown           Boolean            @default(false)
+  agent_addresses    agent_addresses[]
+  reseller_districts reseller_districts @relation(fields: [district_id], references: [id], onDelete: Cascade)
+}
+
+model rewards {
+  id                BigInt    @id @default(autoincrement())
+  title             String    @unique @db.VarChar(300)
+  type              String    @db.VarChar(60)
+  description       String
+  short_description String?   @db.VarChar(200)
+  start_date        DateTime  @db.Timestamptz(6)
+  end_date          DateTime  @db.Timestamptz(6)
+  bonus             BigInt
+  schema_data       Json
+  created_at        DateTime  @db.Timestamptz(6)
+  updated_at        DateTime? @db.Timestamptz(6)
+  deleted_at        DateTime? @db.Timestamptz(6)
+}
+
+model roles {
+  slug        String    @id
+  user_type   String
+  description String
+  created_at  DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime? @default(now()) @db.Timestamptz(6)
+}
+
+model schema_migrations {
+  version BigInt  @id
+  dirty   Boolean
+}
+
+model sso_analytics_dashboard_client_accounts {
+  id                              BigInt                          @id @default(autoincrement())
+  dashboard_client_id             BigInt
+  client_account_id               BigInt
+  created_at                      DateTime                        @default(now()) @db.Timestamptz(6)
+  updated_at                      DateTime?                       @db.Timestamptz(6)
+  sso_client_accounts             sso_client_accounts             @relation(fields: [client_account_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_client_account_id")
+  sso_analytics_dashboard_clients sso_analytics_dashboard_clients @relation(fields: [dashboard_client_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_dashboard_client_id")
+}
+
+model sso_analytics_dashboard_clients {
+  id                                      BigInt                                    @id @default(autoincrement())
+  client_id                               BigInt
+  dashboard_master_id                     BigInt
+  dashboard_url                           String?                                   @db.VarChar(500)
+  created_at                              DateTime                                  @default(now()) @db.Timestamptz(6)
+  updated_at                              DateTime?                                 @db.Timestamptz(6)
+  sso_analytics_dashboard_client_accounts sso_analytics_dashboard_client_accounts[]
+  sso_analytics_dashboard_master          sso_analytics_dashboard_master            @relation(fields: [dashboard_master_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_dashboard_master_id")
+  sso_clients                             sso_clients                               @relation(fields: [client_id], references: [id], onDelete: Cascade)
+}
+
+model sso_analytics_dashboard_master {
+  id                              BigInt                            @id @default(autoincrement())
+  name                            String?                           @db.VarChar(200)
+  code                            String?                           @db.VarChar(200)
+  type                            String?                           @db.VarChar(200)
+  is_default                      Boolean?                          @default(false)
+  platform                        String?                           @db.VarChar(200)
+  base_url                        String?                           @db.VarChar(500)
+  created_at                      DateTime                          @default(now()) @db.Timestamptz(6)
+  updated_at                      DateTime?                         @db.Timestamptz(6)
+  sso_analytics_dashboard_clients sso_analytics_dashboard_clients[]
+}
+
+model sso_client_account_email_tokens {
+  id                  BigInt                         @id @default(autoincrement())
+  client_account_id   BigInt
+  token               String                         @db.Uuid
+  type                sso_account_email_token_type
+  status              sso_account_email_token_status @default(active)
+  expired_at          DateTime                       @db.Timestamptz(6)
+  created_at          DateTime                       @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime?                      @db.Timestamptz(6)
+  sso_client_accounts sso_client_accounts            @relation(fields: [client_account_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_client_account_id")
+}
+
+model sso_client_account_logs {
+  id                  BigInt              @id @default(autoincrement())
+  client_account_id   BigInt
+  source              sso_source
+  notes               String
+  created_at          DateTime            @default(now()) @db.Timestamptz(6)
+  sso_client_accounts sso_client_accounts @relation(fields: [client_account_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_client_account_id")
+}
+
+model sso_client_accounts {
+  id                                      BigInt                                    @id @default(autoincrement())
+  sampingan_id                            BigInt?
+  kerjaan_id                              BigInt?
+  client_id                               BigInt
+  email                                   String                                    @db.VarChar(200)
+  password                                String?                                   @db.VarChar(200)
+  name                                    String                                    @db.VarChar(250)
+  title                                   String?                                   @db.VarChar(200)
+  country_code                            String                                    @db.VarChar(200)
+  phone_number                            String                                    @db.VarChar(200)
+  status                                  sso_account_status                        @default(pending_verification)
+  created_at                              DateTime                                  @default(now()) @db.Timestamptz(6)
+  updated_at                              DateTime?                                 @db.Timestamptz(6)
+  deleted_at                              DateTime?                                 @db.Timestamptz(6)
+  deleted_reason                          String?
+  roles                                   sso_client_account_roles[]                @default([])
+  is_super_admin                          Boolean                                   @default(true)
+  created_by                              String?                                   @db.VarChar(255)
+  updated_by                              String?                                   @db.VarChar(255)
+  client_account_id                       String?                                   @db.VarChar(50)
+  sso_analytics_dashboard_client_accounts sso_analytics_dashboard_client_accounts[]
+  sso_client_account_email_tokens         sso_client_account_email_tokens[]
+  sso_client_account_logs                 sso_client_account_logs[]
+  sso_clients                             sso_clients                               @relation(fields: [client_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_client_id")
+  sso_invoices                            sso_invoices[]
+}
+
+model sso_client_logs {
+  id          BigInt      @id @default(autoincrement())
+  client_id   BigInt
+  source      sso_source
+  notes       String
+  created_at  DateTime    @default(now()) @db.Timestamptz(6)
+  sso_clients sso_clients @relation(fields: [client_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_client_id")
+}
+
+model sso_client_subscription_histories {
+  id                BigInt    @id @default(autoincrement())
+  client_id         BigInt
+  start_date        DateTime? @db.Date
+  end_date          DateTime? @db.Date
+  subscription_type String    @db.VarChar(100)
+
+  @@index([client_id], map: "sso_client_subscription_histories_client_idx")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model sso_client_sync_logs {
+  sso_client_id       BigInt?
+  sampingan_client_id BigInt?
+  kerjaan_client_id   BigInt?
+  post_update         String?
+  notes               String?                     @db.VarChar(250)
+  status              sso_log_action_status_enum?
+  sync_date           DateTime?                   @db.Timestamptz(6)
+
+  @@ignore
+}
+
+model sso_client_token_credit_histories {
+  id                       BigInt                   @id @default(autoincrement())
+  token_id                 BigInt
+  action                   String?                  @db.VarChar(100)
+  value                    BigInt?
+  created_at               DateTime                 @default(now()) @db.Timestamptz(6)
+  updated_at               DateTime?                @db.Timestamptz(6)
+  sso_client_token_credits sso_client_token_credits @relation(fields: [token_id], references: [id], onDelete: Cascade)
+}
+
+model sso_client_token_credits {
+  id                                 BigInt                              @id @default(autoincrement())
+  client_id                          BigInt
+  rule_id                            BigInt?
+  value                              BigInt?
+  created_at                         DateTime                            @default(now()) @db.Timestamptz(6)
+  updated_at                         DateTime?                           @db.Timestamptz(6)
+  sso_client_token_credit_histories  sso_client_token_credit_histories[]
+  sso_clients                        sso_clients                         @relation(fields: [client_id], references: [id], onDelete: Cascade)
+  sso_subscription_plan_rule_masters sso_subscription_plan_rule_masters? @relation(fields: [rule_id], references: [id], onDelete: Cascade)
+}
+
+model sso_clients {
+  id                              BigInt                            @id @default(autoincrement())
+  sampingan_id                    BigInt?
+  kerjaan_id                      BigInt?
+  name                            String                            @db.VarChar(200)
+  tax_id                          String?                           @db.VarChar(200)
+  logo_url                        String                            @db.VarChar(250)
+  website_url                     String?                           @db.VarChar(200)
+  address                         String
+  city                            String                            @db.VarChar(200)
+  country                         String                            @db.VarChar(200)
+  description                     String
+  is_has_merchant                 Boolean                           @default(false)
+  legal_document_url              String?                           @db.VarChar(200)
+  total_employee_from             String?                           @db.VarChar(200)
+  total_employee_to               String?                           @db.VarChar(200)
+  industry_id                     BigInt?
+  person_in_charge_name           String?                           @db.VarChar(200)
+  person_in_charge_email          String?                           @db.VarChar(200)
+  person_in_charge_phone          String?                           @db.VarChar(200)
+  status                          sso_client_status                 @default(inactive)
+  created_at                      DateTime                          @default(now()) @db.Timestamptz(6)
+  updated_at                      DateTime?                         @db.Timestamptz(6)
+  industry_name                   String?                           @db.VarChar(100)
+  verification_status             client_verification_status_enum?
+  subscription_type               String                            @default("FREE_PLAN") @db.VarChar(100)
+  subscription_start_date         DateTime?                         @db.Timestamptz(6)
+  subscription_end_date           DateTime?                         @db.Timestamptz(6)
+  source                          source_type_enum?
+  division_id                     BigInt?
+  position_id                     BigInt?
+  organizer_id                    BigInt?
+  business_type                   String?                           @db.VarChar(200)
+  subscription_commitment         BigInt?
+  client_legal_name               String?                           @db.VarChar(200)
+  usage                           String?                           @db.VarChar(200)
+  created_by                      String?                           @db.VarChar(200)
+  updated_by                      String?                           @db.VarChar(200)
+  inactive_reason                 String?
+  sso_analytics_dashboard_clients sso_analytics_dashboard_clients[]
+  sso_client_accounts             sso_client_accounts[]
+  sso_client_logs                 sso_client_logs[]
+  sso_client_token_credits        sso_client_token_credits[]
+  sso_invoices                    sso_invoices[]
+}
+
+model sso_invoice_items {
+  id           BigInt       @id @default(autoincrement())
+  invoice_id   BigInt
+  description  String       @db.VarChar(250)
+  quantity     BigInt
+  price        BigInt
+  total_amount BigInt
+  sso_invoices sso_invoices @relation(fields: [invoice_id], references: [id], onDelete: Cascade)
+}
+
+model sso_invoices {
+  id                  BigInt                  @id @default(autoincrement())
+  invoice_id          String?                 @db.VarChar(100)
+  client_id           BigInt
+  client_account_id   BigInt
+  invoice_url         String?                 @db.VarChar(250)
+  title               String                  @db.VarChar(250)
+  tax                 BigInt
+  admin_fee           BigInt                  @default(0)
+  total_price         BigInt
+  valid_until         DateTime?               @db.Timestamptz(6)
+  payment_status      sso_invoice_status_enum
+  created_at          DateTime                @db.Timestamptz(6)
+  updated_at          DateTime?               @db.Timestamptz(6)
+  sso_invoice_items   sso_invoice_items[]
+  sso_client_accounts sso_client_accounts     @relation(fields: [client_account_id], references: [id], onDelete: NoAction)
+  sso_clients         sso_clients             @relation(fields: [client_id], references: [id], onDelete: NoAction)
+}
+
+model sso_organizers {
+  id         BigInt    @id @default(autoincrement())
+  name       String    @db.VarChar(200)
+  legal_name String    @db.VarChar(200)
+  logo_url   String    @db.VarChar(250)
+  deleted_at DateTime? @db.Timestamptz(6)
+}
+
+model sso_subscription_plan_rule_masters {
+  id                          BigInt                                              @id @default(autoincrement())
+  rule_type                   String                                              @db.VarChar(100)
+  value_type                  sso_subscription_plan_rule_master_value_types_enum?
+  label                       String                                              @db.VarChar(200)
+  is_show_label               Boolean
+  is_token                    Boolean?                                            @default(false)
+  sso_client_token_credits    sso_client_token_credits[]
+  sso_subscription_plan_rules sso_subscription_plan_rules[]
+}
+
+model sso_subscription_plan_rules {
+  id                                 BigInt                             @id @default(autoincrement())
+  subscription_plan_id               BigInt
+  rule_id                            BigInt
+  value                              String                             @db.VarChar(200)
+  created_at                         DateTime                           @default(now()) @db.Timestamptz(6)
+  updated_at                         DateTime?                          @db.Timestamptz(6)
+  sso_subscription_plan_rule_masters sso_subscription_plan_rule_masters @relation(fields: [rule_id], references: [id], onDelete: Cascade)
+  sso_subscription_plans             sso_subscription_plans             @relation(fields: [subscription_plan_id], references: [id], onDelete: Cascade)
+}
+
+model sso_subscription_plans {
+  id                          BigInt                             @id @default(autoincrement())
+  name                        String                             @db.VarChar(200)
+  subscription_type           String                             @db.VarChar(200)
+  price                       BigInt
+  logo_url                    String?                            @db.VarChar(250)
+  notes                       String?                            @db.VarChar(250)
+  status                      sso_subscription_plan_status_enum?
+  is_default                  Boolean
+  created_at                  DateTime                           @default(now()) @db.Timestamptz(6)
+  updated_at                  DateTime?                          @db.Timestamptz(6)
+  sso_subscription_plan_rules sso_subscription_plan_rules[]
+}
+
+model submission_files {
+  id                 BigInt           @id @default(autoincrement())
+  task_submission_id BigInt
+  is_validated       Boolean
+  type               String           @db.VarChar(80)
+  name               String           @db.VarChar(80)
+  url                String           @db.VarChar(350)
+  tags               Json?
+  task_submissions   task_submissions @relation(fields: [task_submission_id], references: [id], onDelete: Cascade)
+}
+
+model task_submissions {
+  id                   BigInt                      @id @default(autoincrement())
+  project_id           BigInt
+  agent_id             BigInt
+  project_task_id      BigInt
+  status               task_submission_status_enum
+  rejected_reason_data Json?
+  submmision_data      Json?
+  lat_long             Unsupported("point")?
+  city                 String?                     @db.VarChar(80)
+  created_at           DateTime                    @db.Timestamptz(6)
+  updated_at           DateTime?                   @db.Timestamptz(6)
+  reference_id         String?                     @db.VarChar(24)
+  submission_files     submission_files[]
+  agents               agents                      @relation(fields: [agent_id], references: [id], onDelete: Cascade)
+  projects             projects                    @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  project_tasks        project_tasks               @relation(fields: [project_task_id], references: [id], onDelete: Cascade)
+}
+
+model time_precheck_in {
+  id                    BigInt    @id @default(autoincrement())
+  project_references_id String    @db.VarChar(24)
+  agent_references_id   String    @db.VarChar(24)
+  created_at            DateTime  @db.Timestamptz(6)
+  updated_at            DateTime? @db.Timestamptz(6)
+  deleted_at            DateTime? @db.Timestamptz(6)
+  is_confirm            Boolean?
+  is_wa_sent            Boolean?
+}
+
+model users {
+  id           BigInt           @id @default(autoincrement())
+  email        String           @unique @db.VarChar(100)
+  phone_number String           @unique @db.VarChar(100)
+  name         String           @db.VarChar(80)
+  status       user_status_enum
+  created_at   DateTime         @db.Timestamptz(6)
+  updated_at   DateTime?        @db.Timestamptz(6)
+  password     String           @db.VarChar(128)
+  reference_id String           @db.VarChar(24)
+  roles        String[]         @default([]) @db.VarChar
+}
+
+model wallet_transaction_categories {
+  id                  BigInt                                @id @default(autoincrement())
+  name                String                                @unique @db.VarChar(200)
+  created_at          DateTime                              @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime?                             @db.Timestamptz(6)
+  deleted_at          DateTime?                             @db.Timestamptz(6)
+  transfer_type       wallet_transaction_transfer_type_enum @default(credit)
+  wallet_transactions wallet_transactions[]
+}
+
+model wallet_transactions {
+  id                            BigInt                         @id @default(autoincrement())
+  agent_id                      BigInt
+  category_id                   BigInt
+  reference_object_id           BigInt?
+  reference_code                String                         @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  amount                        BigInt                         @default(0)
+  description                   String                         @db.VarChar(200)
+  currency                      String                         @default("IDR") @db.VarChar(50)
+  status                        wallet_transaction_status_enum @default(pending)
+  created_at                    DateTime                       @default(now()) @db.Timestamptz(6)
+  updated_at                    DateTime?                      @db.Timestamptz(6)
+  deleted_at                    DateTime?                      @db.Timestamptz(6)
+  agents                        agents                         @relation(fields: [agent_id], references: [id], onDelete: Cascade)
+  wallet_transaction_categories wallet_transaction_categories  @relation(fields: [category_id], references: [id], onDelete: Cascade)
+  wallet_withdrawals            wallet_withdrawals[]
+}
+
+model wallet_withdrawals {
+  id                             BigInt                                    @id(map: "wallet_withdrawal_pkey") @default(autoincrement())
+  transaction_id                 BigInt
+  vendor_name                    wallet_transaction_withdrawal_vendor_enum
+  reference_id                   String?                                   @db.VarChar(100)
+  amount                         BigInt
+  currency                       String                                    @default("IDR") @db.VarChar(50)
+  payment_channel                String                                    @db.VarChar(200)
+  payment_additional_information String                                    @default("") @db.VarChar(200)
+  created_at                     DateTime                                  @default(now()) @db.Timestamptz(6)
+  updated_at                     DateTime?                                 @db.Timestamptz(6)
+  deleted_at                     DateTime?                                 @db.Timestamptz(6)
+  wallet_transactions            wallet_transactions                       @relation(fields: [transaction_id], references: [id], onDelete: Cascade, map: "wallet_withdrawal_transaction_id_fkey")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model warehouse_coverage_cities {
+  warehouse_id        BigInt
+  city_id             BigInt
+  created_at          DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime?           @db.Timestamptz(6)
+  deleted_at          DateTime?           @db.Timestamptz(6)
+  reseller_cities     reseller_cities     @relation(fields: [city_id], references: [id], onDelete: Cascade)
+  logistic_warehouses logistic_warehouses @relation(fields: [warehouse_id], references: [id], onDelete: Cascade)
+
+  @@ignore
+}
+
+model whatsapp_blaster_audiences {
+  id                         BigInt                     @id(map: "whatsapp_blaster_audience_pkey") @default(autoincrement())
+  schedule_id                BigInt
+  whatsapp_number            String                     @db.VarChar(20)
+  name                       String                     @db.VarChar(100)
+  status                     String                     @db.VarChar(50)
+  created_at                 DateTime                   @db.Timestamptz(6)
+  updated_at                 DateTime?                  @db.Timestamptz(6)
+  failed_reason              String?
+  kataai_message_id          String?                    @db.VarChar(200)
+  on_sync_process            Boolean?                   @default(false)
+  whatsapp_blaster_schedules whatsapp_blaster_schedules @relation(fields: [schedule_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_schedule")
+}
+
+model whatsapp_blaster_balances {
+  id                BigInt    @id @default(autoincrement())
+  current_balance   Float
+  created_at        DateTime? @db.Timestamptz(6)
+  updated_at        DateTime? @db.Timestamptz(6)
+  available_balance Float     @default(0)
+}
+
+model whatsapp_blaster_schedules {
+  id                         BigInt                       @id @default(autoincrement())
+  job_post_id                BigInt
+  template_id                BigInt
+  schedule_type              String                       @db.VarChar(100)
+  schedule_time              DateTime?                    @db.Timestamptz(6)
+  status                     String                       @db.VarChar(100)
+  start_at                   DateTime?                    @db.Timestamptz(6)
+  end_at                     DateTime?                    @db.Timestamptz(6)
+  total_audience             Int?                         @default(0)
+  total_sent                 Int?                         @default(0)
+  total_failed               Int?                         @default(0)
+  total_read                 Int?                         @default(0)
+  total_deleted              Int?                         @default(0)
+  created_at                 DateTime                     @db.Timestamptz(6)
+  updated_at                 DateTime?                    @db.Timestamptz(6)
+  total_retry                Int?                         @default(0)
+  total_delivered            Int?                         @default(0)
+  whatsapp_blaster_audiences whatsapp_blaster_audiences[]
+  whatsapp_blaster_templates whatsapp_blaster_templates   @relation(fields: [template_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_template")
+}
+
+model whatsapp_blaster_templates {
+  id                         BigInt                       @id @default(autoincrement())
+  kataai_template_message    String
+  kataai_template_id         String                       @db.VarChar(200)
+  variables                  String                       @db.VarChar(200)
+  is_active                  Boolean                      @default(true)
+  created_at                 DateTime?                    @db.Timestamptz(6)
+  updated_at                 DateTime?                    @db.Timestamptz(6)
+  whatsapp_blaster_schedules whatsapp_blaster_schedules[]
+}
+
+model whatsapp_notification_audiences {
+  id                              BigInt                                     @id @default(autoincrement())
+  request_id                      BigInt
+  number                          String                                     @db.VarChar(20)
+  ref_id                          String                                     @db.VarChar(200)
+  kataai_message_id               String?                                    @db.VarChar(200)
+  failed_reason                   String?
+  total_retry                     Int?                                       @default(0)
+  is_need_success_callback        Boolean?                                   @default(false)
+  is_success_callback_sent        Boolean?                                   @default(false)
+  success_callback_error_response Json?
+  is_need_failed_callback         Boolean?                                   @default(false)
+  is_failed_callback_sent         Boolean?                                   @default(false)
+  failed_callback_error_response  Json?
+  start_at                        DateTime?                                  @db.Timestamptz(6)
+  end_at                          DateTime?                                  @db.Timestamptz(6)
+  created_at                      DateTime                                   @default(now()) @db.Timestamptz(6)
+  updated_at                      DateTime?                                  @db.Timestamptz(6)
+  status                          whatsapp_notification_audience_status_enum @default(waiting)
+}
+
+model whatsapp_notification_requests {
+  id                 BigInt                                    @id @default(autoincrement())
+  kataai_template_id String                                    @db.VarChar(200)
+  args               String[]
+  total_args         Int?                                      @default(0)
+  total_audience     Int?                                      @default(0)
+  total_sent         Int?                                      @default(0)
+  total_failed       Int?                                      @default(0)
+  source             String?                                   @db.VarChar(200)
+  start_at           DateTime?                                 @db.Timestamptz(6)
+  end_at             DateTime?                                 @db.Timestamptz(6)
+  created_at         DateTime                                  @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime?                                 @db.Timestamptz(6)
+  status             whatsapp_notification_request_status_enum @default(waiting)
+}
+
+model withdraw_requests {
+  id           BigInt                        @id @default(autoincrement())
+  agent_id     BigInt
+  payment_id   BigInt[]
+  status       withdraw_request_status_enum?
+  amount       BigInt?
+  handling_fee BigInt?
+  notes        String?
+  created_at   DateTime                      @db.Timestamptz(6)
+  updated_at   DateTime?                     @db.Timestamptz(6)
+  deleted_at   DateTime?                     @db.Timestamptz(6)
+  reference_id String?                       @db.VarChar(24)
+  agents       agents                        @relation(fields: [agent_id], references: [id], onDelete: Cascade)
+}
+
+model work_industries {
+  id                        BigInt                      @id @default(autoincrement())
+  name                      String                      @unique @db.VarChar(150)
+  created_at                DateTime                    @default(now()) @db.Timestamptz(6)
+  updated_at                DateTime?                   @db.Timestamptz(6)
+  deleted_at                DateTime?                   @db.Timestamptz(6)
+  is_active                 Boolean?                    @default(true)
+  agent_working_experiences agent_working_experiences[]
+  clients                   clients[]
+}
+
+enum agent_documents_category_enum {
+  document_cv
+  document_vaccinate
+}
+
+enum agent_facilities_category_enum {
+  transportation
+  device
+}
+
+enum agent_gender_enum {
+  male
+  female
+}
+
+enum agent_status_enum {
+  pending_approval
+  inactive
+  unverified
+  rejected
+  active
+  unverified_phone
+}
+
+enum agent_type_enum {
+  registered_agent
+  external_applicant
+}
+
+enum audit_trails_action_enum {
+  create
+  update
+  delete
+}
+
+enum bookmarked_agent_status_enum {
+  disbanded
+  favorite
+}
+
+enum client_account_status_enum {
+  pending_verification
+  active
+  inactive
+}
+
+enum client_verification_status_enum {
+  unverified
+  pending_approval
+  rejected
+  verified
+}
+
+enum email_notification_audience_status {
+  waiting
+  sent
+  retry
+  failed
+}
+
+enum email_notification_callback_status {
+  pending
+  success
+  failed
+}
+
+enum email_notification_provider {
+  aws
+  gmail
+}
+
+enum email_notification_request_status {
+  waiting
+  in_queue
+  retry
+  done
+  failed
+}
+
+enum email_notification_schedule_type {
+  scheduled
+  now
+}
+
+enum employment_status_enum {
+  EMPTY_ENUM_VALUE @map("")
+  contract
+  partnership
+}
+
+enum form_type_enum {
+  EMPTY_ENUM_VALUE @map("")
+  approval_form
+  offering_form
+}
+
+enum inbox_button_type_enum {
+  deeplink
+  url
+  external
+}
+
+enum inbox_category_enum {
+  general
+  data_collection
+  part_timer
+  distribution
+  sales_acquisition
+  microtask
+  information
+}
+
+enum inbox_notification_button_colour_enum {
+  EMPTY_ENUM_VALUE   @map("")
+  active_primary
+  muted_primary
+  negative_primary
+  disabled_primary
+  ghost_primary
+  active_secondary
+  muted_secondary
+  negative_secondary
+  disabled_secondary
+  ghost_secondary
+  active_tertiary
+  muted_tertiary
+  negative_tertiary
+  disabled_tertiary
+  ghost_tertiary
+}
+
+enum inbox_schedule_type_enum {
+  now
+  schedule
+}
+
+enum inbox_source_enum {
+  automate
+  portal
+}
+
+enum inbox_target_criteria_operator_enum {
+  AND
+  OR
+  NONE
+}
+
+enum inbox_target_criteria_type_enum {
+  agent_domicile
+  allowed_agent
+  agent_take_project
+  agent_active_project
+}
+
+enum invoice_status_enum {
+  waiting_approval
+  approved
+  rejected
+}
+
+enum job_application_rejection_source_enum {
+  EMPTY_ENUM_VALUE @map("")
+  client
+  system
+  system_sync
+  agent
+}
+
+enum job_application_rejection_stage_enum {
+  EMPTY_ENUM_VALUE            @map("")
+  cancel_at_interview_process
+  cancel_at_onboard_process
+  on_process
+  selection
+}
+
+enum job_application_status_enum {
+  EMPTY_ENUM_VALUE @map("")
+  selection
+  on_process
+  accepted
+  rejected
+  cancelled
+}
+
+enum job_availability_status_enum {
+  EMPTY_ENUM_VALUE @map("")
+  available
+  unavailable
+  inactive
+}
+
+enum job_criteria_type_enum {
+  string
+  array_string
+  array_key_value
+  array_freetext
+  array_range
+}
+
+enum job_requirement_category_enum {
+  transportation
+  device
+  document
+}
+
+enum link_type_enum {
+  sampingan_lite
+  sampingan_app
+  sampingan_cp
+}
+
+enum master_bank_type_enum {
+  bank
+  ewallet
+}
+
+enum onboarding_screen_handler_enum {
+  webview
+  deeplink
+}
+
+enum order_payment_status_enum {
+  success
+  failed
+  waiting
+}
+
+enum order_status_enum {
+  Purchase_Order        @map("Purchase Order")
+  Sales_Order           @map("Sales Order")
+  Confirmed_Sales_Order @map("Confirmed Sales Order")
+  Delivery_Order        @map("Delivery Order")
+  Closed_Order          @map("Closed Order")
+  Cancelled
+  Dropped
+  Refunded
+  Ready_to_Deliver      @map("Ready to Deliver")
+}
+
+enum payment_callback_status_enum {
+  waiting
+  in_queue
+  retry
+  done
+  failed
+}
+
+enum payment_disbursement_approval_status_enum {
+  need_approval
+  rejected
+  approved
+}
+
+enum payment_disbursement_status_enum {
+  in_progress
+  failed
+  partially_success
+  success
+}
+
+enum payment_disbursement_transaction_status_enum {
+  uploaded
+  pending
+  failed
+  completed
+}
+
+enum payment_object_type_enum {
+  task_submission
+  time__submission
+  product_submission
+  reward
+}
+
+enum payment_status_enum {
+  due
+  paid
+}
+
+enum pre_registration_type_enum {
+  agent
+}
+
+enum project_agent_status_enum {
+  active
+  inactive
+  unverified
+  pending_approval
+  rejected
+  disbanded
+}
+
+enum project_agent_training_status_enum {
+  complete
+  incomplete
+}
+
+enum project_application_onboard_administration_status_enum {
+  pending
+  sending
+  waiting
+  verification
+  rejected
+  success
+  failed
+  question_expired
+}
+
+enum project_application_onboard_material_status_enum {
+  pending
+  sending
+  success
+  failed
+}
+
+enum project_application_onboard_status_enum {
+  pending
+  waiting
+  sending
+  retry
+  success
+  failed
+}
+
+enum project_application_onboard_token_type_enum {
+  submit
+  resubmit
+}
+
+enum project_approval_status_enum {
+  in_review
+  rejected
+  approved
+  waiting_payment
+}
+
+enum project_category_enum {
+  task
+  time
+  product
+  jobpost
+}
+
+enum project_job_post_application_interview_result {
+  EMPTY_ENUM_VALUE @map("")
+  very_recommended
+  recommended
+  considered
+  not_recommended
+}
+
+enum project_job_post_application_interview_status {
+  invited
+  expired
+  waiting
+  confirmed
+  finished
+  resigned
+  not_attended
+}
+
+enum project_job_post_application_source_enum {
+  empty
+  external_link
+  sampingan_app
+}
+
+enum project_job_post_interview_schedule_status {
+  open
+  booked
+  expired
+}
+
+enum project_job_post_interview_status {
+  draft
+  published
+  expired
+}
+
+enum project_job_post_interview_type {
+  direct
+  online
+  onsite
+}
+
+enum project_job_posts_employment_type_enum {
+  Part_time @map("Part-time")
+  Full_time @map("Full-time")
+  Freelance
+  Temporer
+}
+
+enum project_job_posts_incentive_period_enum {
+  Daily
+  Weekly
+  Monthly
+}
+
+enum project_status_enum {
+  inactive
+  active
+  cancelled
+  rejected
+  in_review
+  draft
+  finished
+  approved
+  waiting_payment
+}
+
+enum project_times_dimension_enum {
+  Daily
+  Monthly
+}
+
+enum project_times_shift_enum {
+  Sunday
+  Monday
+  Tuesday
+  Wednesday
+  Thursday
+  Friday
+  Saturday
+}
+
+enum project_type_enum {
+  tbd
+  verified
+  public
+}
+
+enum push_notification_audience_status {
+  success
+  failed
+}
+
+enum push_notification_channel {
+  firebase
+}
+
+enum push_notification_source {
+  job_post
+  submission
+}
+
+enum shipping_cost_calculation_type_enum {
+  district
+  postal
+}
+
+enum source_type_enum {
+  internal_registration
+  self_registration
+}
+
+enum sso_account_email_token_status {
+  active
+  inactive
+}
+
+enum sso_account_email_token_type {
+  email_verification
+  forgot_password
+}
+
+enum sso_account_status {
+  pending_verification
+  active
+  inactive
+}
+
+enum sso_client_account_roles {
+  recruitment
+  management
+}
+
+enum sso_client_status {
+  active
+  inactive
+}
+
+enum sso_invoice_status_enum {
+  pending
+  paid
+  expired
+}
+
+enum sso_log_action_status_enum {
+  success
+  failed
+}
+
+enum sso_source {
+  seamless
+  management
+  recruitment
+}
+
+enum sso_subscription_plan_rule_master_value_types_enum {
+  string
+  integer
+  boolean
+}
+
+enum sso_subscription_plan_status_enum {
+  active
+  inactive
+}
+
+enum task_submission_status_enum {
+  pending_approval
+  approved
+  rejected
+}
+
+enum user_status_enum {
+  active
+  inactive
+}
+
+enum user_type_enum {
+  agent
+  client
+  internal
+}
+
+enum wallet_transaction_status_enum {
+  pending
+  processing
+  paid
+  void
+  cancelled
+}
+
+enum wallet_transaction_transfer_type_enum {
+  credit
+  debit
+}
+
+enum wallet_transaction_withdrawal_vendor_enum {
+  midtrans
+}
+
+enum whatsapp_notification_audience_status_enum {
+  waiting
+  sending
+  sent
+  retry
+  failed
+}
+
+enum whatsapp_notification_request_status_enum {
+  waiting
+  in_queue
+  sending
+  done
+}
+
+enum withdraw_request_status_enum {
+  approved
+  rejected
+  pending_approval
+}
+
+enum working_schema_enum {
+  onsite
+  remote
+  EMPTY_ENUM_VALUE @map("")
+  flexible
+}

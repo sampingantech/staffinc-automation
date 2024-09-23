@@ -3,7 +3,7 @@ import {Randomizer} from "core/utils/randomizer";
 const randomizer = new Randomizer()
 export class PayrollGroupsData {
     createPayrollGroup(
-        branchId= 1823
+        branchId= 1823, client_id= 2351
                        ) {
         return {
             name: randomizer.lorem.sentence(10),
@@ -72,13 +72,13 @@ export class PayrollGroupsData {
                     branch_id: branchId
                 }
             ],
-            client_id: 2351, // ini jangan di hardcode , perlu tau client ID nya
+            client_id,
             bpjs_insurance_baseline_value: 0,
             bpjs_insurance_baseline_type: "salary",
             bpjs_employment_baseline_value: 0,
             bpjs_employment_baseline_type: "salary",
             prorated_shift_type_ids: [],
-            allowance_transport_eligible_attendance_statuses: [
+            allowance_transport_eligible_attendance_statuses: [ // di bikin json aja di sheet nya
                 "approved",
                 "overtime",
                 "paid_leave",
