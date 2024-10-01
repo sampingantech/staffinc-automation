@@ -10,6 +10,7 @@ import {
     getBranchAttendancesType
 } from "../../../api/kerjaan-service/v1/client/branch-attendances/branch-attendances.type";
 import {StaffincSuite} from "core/utils/token/modules/staffinc-suite";
+import {createAttendancesPayloadType} from "../../../api/kerjaan-service/v1/attendances/attendances.type";
 
 const branchAttendances = new BranchAttendances(token.get('ADMIN'))
 
@@ -20,8 +21,9 @@ const branchAttendances = new BranchAttendances(token.get('ADMIN'))
  * @param user label on tokens.json
  * @param tokenExist flag for checking on tokens.json, set false if want to generate manually based on phone number
  * @param phoneNumber phone number provided for generating token
+ * @param data
  */
-export async function createAttendances({user='', tokenExist = false, phoneNumber = ''
+export async function createAttendances({user='', tokenExist = false, phoneNumber = '', data
 }) {
     let attendance: AttendancesComponent
     if (tokenExist) {
@@ -34,11 +36,10 @@ export async function createAttendances({user='', tokenExist = false, phoneNumbe
         attendance = new AttendancesComponent(generateToken['user'])
     }
     await test.step('Create attendance', async () => {
-        const attendancePayload = attendance.data.createAttendances()
+        const attendancePayload = attendance.data.createAttendances(data)
         const attendanceResponse = await attendance.postCreateAttendances(attendancePayload)
         expect(attendanceResponse).isCorrectResponse(200, attendance.schema.postAttendances())
     })
-
 }
 export async function getBranchAttendances(branchId: number) {
     let listAttendances: AxiosResponse<getBranchAttendancesType>;

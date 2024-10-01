@@ -20,6 +20,12 @@ export const defaultConfig: PlaywrightTestConfig = {
     globalSetup: require.resolve(
         resolve(__dirname, '..', 'playwright', 'hooks', 'global.setup')
     ),
+    use: {
+        // ...
+        trace: "on",
+        video: "on",
+        screenshot: "on",
+    },
     reporter: [
         ['list'],
     ],

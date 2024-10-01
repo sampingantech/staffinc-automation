@@ -19,7 +19,7 @@ class Spreadsheet {
 
     private deleteFileIfExists(filePath: string): void {
         if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath); // Menghapus file jika ada
+            fs.rmSync(filePath); // Menghapus file jika ada
             console.log(`Existing file deleted: ${filePath}`);
         }
     }

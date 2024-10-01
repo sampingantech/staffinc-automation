@@ -45,4 +45,18 @@ export class AttendancesSchema {
             override_checkout_timezone: z.null(),
         });
     }
+    createAttendancesPayload () {
+        return z.object({
+            branch_shift_id: z.null(),
+            attendance_type: z.string(),
+            location: z.array(z.number()),
+            notes: z.null(),
+            code: z.null(),
+            selfie_url: z.string(),
+            check_type: z.string(),
+            force_submit: z.boolean(),
+            action_timestamp: z.string(),
+        });
+
+    }
 }
