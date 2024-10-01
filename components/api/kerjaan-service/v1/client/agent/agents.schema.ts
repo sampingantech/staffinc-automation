@@ -52,4 +52,71 @@ export class agentSchema {
         });
 
     }
+    createAgent() {
+        return z.object({
+            attendance: z.object({ leave_policy_ids: z.array(z.number()) }),
+            emergency_contact: z.object({
+                address: z.string(),
+                name: z.string(),
+                phone_number: z.string(),
+                relationship: z.string(),
+            }),
+            employee: z.object({
+                approval_client_acc_id: z.number(),
+                branch_id: z.string(),
+                email: z.string(),
+                join_date: z.string(),
+                name: z.string(),
+                payroll_group_id: z.string(),
+                phone_number: z.string(),
+                position: z.string(),
+            }),
+            employment_data: z.object({
+                contract_type: z.string(),
+                deployment_city_id: z.number(),
+                deployment_district_id: z.number(),
+                deployment_group: z.string(),
+                deployment_province_id: z.number(),
+                employment_type: z.string(),
+                end_date: z.string(),
+                external_id: z.string(),
+                privy_id: z.string(),
+                project_ids: z.array(z.number()),
+                start_date: z.string(),
+                entity_company: z.string(),
+            }),
+            payment_information: z.object({
+                account_number: z.string(),
+                bank_code_id: z.number(),
+                bank_name: z.string(),
+                owner_name: z.string(),
+                passbook_image_url: z.string(),
+            }),
+            personal_data: z.object({
+                birth_place: z.string(),
+                blood_type: z.string(),
+                citizenship_image_url: z.string(),
+                citizenship_number: z.string(),
+                city_id: z.number(),
+                date_of_birth: z.string(),
+                district_id: z.number(),
+                domicile: z.string(),
+                gender: z.string(),
+                marital_status: z.string(),
+                province_id: z.number(),
+                religion: z.string(),
+            }),
+            social_security: z.object({
+                bpjs_of_health_number: z.string(),
+                bpjs_membership: z.string(),
+                bpjs_of_employment_number: z.string(),
+                bpjs_tk_program: z.array(z.string()),
+                is_bpjs_calculation_active: z.boolean(),
+                is_bpjs_employment_calculation_active: z.boolean(),
+                non_taxable_income_status: z.string(),
+                tax_id: z.string(),
+            }),
+        });
+
+    }
 }

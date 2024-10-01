@@ -16,6 +16,9 @@ import {
 import Spreadsheet from "core/utils/spreadsheet";
 import {createBranchPayloadType} from "../../api/kerjaan-service/v1/client/branches/branches.type";
 import {createPayrollGroupType} from "../../api/kerjaan-service/v1/client/payroll-groups/payroll-groups.type";
+import {createAgentPayloadType} from "../../api/kerjaan-service/v1/client/agent/agent.type"
+import {createAttendancesPayloadType} from "../../api/kerjaan-service/v1/attendances/attendances.type";
+
 
 type options = {
     stopAt?: undefined | checkpoint
@@ -61,25 +64,30 @@ export async function E2EStep({
     console.log(
         `Matching data found on sheet, using "${matchingData[':Description']}"`
     )
+
     returnPayload['sheetMatchingData'] = matchingData
-    console.log(returnPayload.sheetMatchingData)
+
+
 
     if (stopAt === 'createBranch') return returnPayload
     // TODO: should use filter to extract data from array
-    const branchData = JSON.parse(sheetData[0].Branch) as createBranchPayloadType
+    const branchData = JSON.parse(returnPayload.sheetMatchingData.Branch) as createBranchPayloadType
     const branchId = await createBranch(branchData)
 
     if (stopAt === 'createPayrollGroup') return returnPayload
-    const payrollGroupData = JSON.parse(sheetData[0].PayrollGroup) as createPayrollGroupType
+    const payrollGroupData = JSON.parse(returnPayload.sheetMatchingData.PayrollGroup) as createPayrollGroupType
     const payrollGroupId = await createPayrollGroups(branchId, undefined, payrollGroupData)
     returnPayload['payrollgroupId'] = payrollGroupId
 
     if (stopAt === 'createEmployee') return returnPayload
-    const phoneNumber = await createEmployee(branchId, payrollGroupId)
+    const createEmployeeData = JSON.parse(returnPayload.sheetMatchingData.EmployeeData) as createAgentPayloadType
+    const phoneNumber = await createEmployee(branchId, payrollGroupId, createEmployeeData)
     returnPayload['phoneNumber'] = phoneNumber
 
     if (stopAt === 'signAttendance') return returnPayload
-    await createAttendances({phoneNumber})
+    console.log(returnPayload.sheetMatchingData.SignAttendance)
+    const createAttendancesData = JSON.parse(returnPayload.sheetMatchingData.SignAttendance) as createAttendancesPayloadType
+    await createAttendances({phoneNumber, data : createAttendancesData })
 
     if (stopAt === 'approveAttendance') return returnPayload
     const listAttendance = await getBranchAttendances(branchId)

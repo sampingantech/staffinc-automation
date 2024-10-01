@@ -15,7 +15,7 @@ test.skip('End to End', async () => {
     const branchId = await createBranch()
     const payrollGroupId = await createPayrollGroups(branchId)
     const phoneNumber = await createEmployee(branchId, payrollGroupId)
-    await createAttendances({phoneNumber})
+    await createAttendances(phoneNumber)
     const listAttendance = await getBranchAttendances(branchId)
     await approveAttendances(listAttendance)
     const payrollReportId = await createPayrollReports([branchId], [payrollGroupId])
@@ -27,7 +27,6 @@ test.skip('End to End', async () => {
 
 test('E2E Component', async () => {
     const e2e = await E2EStep({
-        stopAt: "createBranch",
-        dataDDTDescription: "apa"
+        dataDDTDescription: "happy flow"
     })
 })

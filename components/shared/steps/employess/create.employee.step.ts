@@ -2,13 +2,14 @@ import {Agents} from "../../../api/kerjaan-service/v1/client/agent/agents.compon
 import { token } from 'core/utils'
 import { expect, test } from 'core'
 import {DefaultOtp} from "../../../api/kerjaan-service/v1/client/agent/default-otp/default-otp.component";
+import {createAgentPayloadType} from "../../../api/kerjaan-service/v1/client/agent/agent.type";
 
 const createAgent = new Agents(token.get('ADMIN'))
 
-export async function createEmployee(branchId?: number, payrollGropId?: number) {
+export async function createEmployee(branchId?: number, payrollGroupId?: number, data?: createAgentPayloadType) {
     let employeeId;
     await test.step('Create Employee', async () => {
-        const agentsPayload = createAgent.data.createAgent(branchId, payrollGropId)
+        const agentsPayload = createAgent.data.createAgent(data, branchId, payrollGroupId)
         const createAgentResponse =
             await createAgent.postCreateAgent(agentsPayload)
         expect(createAgentResponse).isCorrectResponse(
